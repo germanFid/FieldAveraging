@@ -1,1 +1,1 @@
-# FieldAveraging
+# Averaging Fields of Physical Quantities
