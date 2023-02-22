@@ -1,7 +1,7 @@
-def SquareAveraging(OurField, i, j, k):
+def AverageThisPoint(i, j, In_Field, k):
 
-    m = len(OurField[0])
-    n = len(OurField)
+    m = len(In_Field[0])
+    n = len(In_Field)
 
     i_start = i-k
     if (i_start < 0):
@@ -21,39 +21,34 @@ def SquareAveraging(OurField, i, j, k):
     SumOfElements = 0
     for ii in range(i_start, i_end):
         for jj in range(j_start, j_end):
-            SumOfElements = SumOfElements+OurField[ii][jj]
+            SumOfElements = SumOfElements+In_Field[ii][jj]
 
     AverageValue = SumOfElements / NumberOfElements
 
     ij_value = AverageValue
 
-    return (ij_value)
+    return(ij_value)
 
 
-def AverageThisField(OurField, k):
-    print("AverageThisField")
-    m = len(OurField[0])
-    n = len(OurField)
+def Line2Row_AverageThis(InputField, k):
+    
+    m = len(InputField[0])
+    n = len(InputField)
 
     OutputField = [[0 for x in range(m)] for y in range(n)]
 
     for i in range(0, n):
         for j in range(0, m):
 
-            print("ElementNumber = "+str(i)+", "+str(j))
+            OutputField[i][j] = AverageThisPoint(i, j, InputField, k)
 
-            OutputField[i][j] = SquareAveraging(OurField, i, j, k)
-
-    return (OutputField)
+    return(OutputField)
 
 
-def DiagonalAverageThisField(OurField, k):
+def Diagonally_AverageThis(InputField, k):
 
-    print("DiagonalAverageThisField")
-    n = len(OurField[0])
-    m = len(OurField)
-
-    print(">> n, m", n, m)
+    n = len(InputField[0])
+    m = len(InputField)
 
     OutputField = [[0 for x in range(n)] for y in range(m)]
 
@@ -62,9 +57,7 @@ def DiagonalAverageThisField(OurField, k):
         j = 0
         while i >= 0 and j <= m-1:
 
-            print("ElementNumber = " + str(i) + ", " + str(j))
-
-            OutputField[j][i] = SquareAveraging(OurField, i, j, k)
+            OutputField[j][i] = AverageThisPoint(i, j, InputField, k)
 
             if (i >= 0):
                 i = i-1
@@ -76,9 +69,7 @@ def DiagonalAverageThisField(OurField, k):
         i = n-1
         while i >= 0 and j <= m-1:
 
-            print("ElementNumber = "+str(i)+", "+str(j))
-
-            OutputField[j][i] = SquareAveraging(OurField, i, j, k)
+            OutputField[j][i] = AverageThisPoint(i, j, InputField, k)
 
             if (i >= 0):
                 i = i-1
@@ -87,33 +78,15 @@ def DiagonalAverageThisField(OurField, k):
 
     return (OutputField)
 
-
-def FieldAveraging(InputArray):
-
-    k = 1
-
-    print(InputArray)
-
-    for i in range(1, 3):
-        print("GlobalIterNumber = "+str(i))
-        TempArray = AverageThisField(InputArray, k)
-        InputArray = TempArray
-        print(TempArray)
-
-    for i in range(1, 3):
-        print("GlobalIterNumber = "+str(i))
-        TempArray = DiagonalAverageThisField(InputArray, k)
-        
-
-    return TempArray
-
-
 def Test():
+    AveragingWidth=1
     w, h = 5, 3
-    InputArray = [[0 for x in range(w)] for y in range(h)]
-    InputArray[0][0] = 15
-    print(InputArray)
-    print(FieldAveraging(InputArray))
+    InputField = [[0 for x in range(w)] for y in range(h)]
+    InputField[0][0] = 15
+    print(InputField)
+    TempField=InputField
+    print(Line2Row_AverageThis(TempField, AveragingWidth))
 
+    TempField=InputField
+    print(Diagonally_AverageThis(TempField, AveragingWidth))
 
-# KEKW()
