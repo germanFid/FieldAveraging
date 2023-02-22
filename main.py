@@ -1,6 +1,9 @@
 import numpy as np
 import argparse
 import pltparser
+import averager
+
+from pprint import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('inputfile', help='input plt file')
@@ -15,4 +18,9 @@ if args.Header:
 
 data = pltparser.ParsePlt(args.inputfile, '\t', DEFAULT_HEADER)
 
-print(data)
+averager.Test()
+
+# result = averager.FieldAveraging(data)
+
+# pprint(data)
+# pprint(result)
