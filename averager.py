@@ -1,7 +1,7 @@
-def Average_This_Point(j, i, In_Field, k):
+def average_this_point(j, i, in_field, k):
 
-    n = len(In_Field[0])
-    m = len(In_Field)
+    n = len(in_field[0])
+    m = len(in_field)
     
     i_start = i-k
     if i_start < 0:
@@ -16,44 +16,44 @@ def Average_This_Point(j, i, In_Field, k):
     if j_end > m-1:
         j_end = m-1
 
-    Number_Of_Elements = (i_end-i_start+1) * (j_end-j_start+1)
-    Sum_Of_Elements = 0.0
+    number_of_elements = (i_end-i_start+1) * (j_end-j_start+1)
+    sum_of_elements = 0.0
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
-            Sum_Of_Elements = Sum_Of_Elements+In_Field[jj][ii]
-    Average_Value = Sum_Of_Elements / Number_Of_Elements
-    ij_value = Average_Value
+            sum_of_elements = sum_of_elements+in_field[jj][ii]
+    average_value = sum_of_elements / number_of_elements
+    ij_value = average_value
     return ij_value
 
 
-def Line_2_Row_Averaging_This(Inputed_Field, k):
+def line_2_row_averaging_this(inputed_field, k):
     
-    n = len(Inputed_Field[0])
-    m = len(Inputed_Field)
+    n = len(inputed_field[0])
+    m = len(inputed_field)
 
-    Output_Field = [[0 for x in range(n)] for y in range(m)]
-    print(Output_Field) 
+    output_field = [[0 for x in range(n)] for y in range(m)]
+    print(output_field) 
     for i in range(0, n):
         for j in range(0, m):
 
-            Output_Field[j][i] = Average_This_Point(j, i, Inputed_Field, k)
+            output_field[j][i] = average_this_point(j, i, inputed_field, k)
 
-    return Output_Field
+    return output_field
 
 
-def Diagonally_Averaging_This(Inputed_Field, k):
+def diagonally_averaging_this(inputed_field, k):
 
-    n = len(Inputed_Field[0])
-    m = len(Inputed_Field)
+    n = len(inputed_field[0])
+    m = len(inputed_field)
 
-    Output_Field = [[0 for x in range(n)] for y in range(m)]
+    output_field = [[0 for x in range(n)] for y in range(m)]
     
     for i_begin in range(0, n):
         i = i_begin
         j = 0
         while i >= 0 and j <= m-1:
 
-            Output_Field[j][i] = Average_This_Point(j, i, Inputed_Field, k)
+            output_field[j][i] = average_this_point(j, i, inputed_field, k)
 
             if i >= 0:
                 i = i-1
@@ -65,24 +65,24 @@ def Diagonally_Averaging_This(Inputed_Field, k):
         i = n-1
         while i >= 0 and j <= m-1:
 
-            Output_Field[j][i] = Average_This_Point(i, j, Inputed_Field, k)
+            output_field[j][i] = average_this_point(i, j, inputed_field, k)
 
             if i >= 0:
                 i = i-1
             if j <= m-1:
                 j = j+1
 
-    return Output_Field
+    return output_field
 
 
-def Test():
-    Averaging_Width = 1
+def test():
+    averaging_width = 1
     w, h = 5, 3
-    Input_Field = [[0 for x in range(w)] for y in range(h)]
-    Input_Field[2][1] = 15
-    print(Input_Field)
-    Temp_Field=Input_Field
-    print(Line_2_Row_Averaging_This(Temp_Field, Averaging_Width))
-    #Temp_Field=Input_Field
-    #print(Diagonally_Averaging_This(Temp_Field, Averaging_Width))
+    input_field = [[0 for x in range(w)] for y in range(h)]
+    input_field[2][1] = 15
+    print(input_field)
+    temp_field=input_field
+    print(line_2_row_averaging_this(temp_field, averaging_width))
+    temp_field=input_field
+    print(diagonally_averaging_this(temp_field, averaging_width))
 
