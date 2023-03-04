@@ -16,7 +16,13 @@ def average_this_point(j, i, in_field, k):
     if j_end > m-1:
         j_end = m-1
 
-    number_of_elements = (i_end-i_start+1) * (j_end-j_start+1)
+    height = j_end-j_start+1
+    width = i_end-i_start+1
+    if height == 0:
+        height = 1
+    if width == 0:
+        width = 1
+    number_of_elements = width * height
     sum_of_elements = 0.0
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
@@ -46,7 +52,7 @@ def diagonally_averaging_this(inputed_field, k):
     n = len(inputed_field[0])
     m = len(inputed_field)
 
-    output_field = [[float(0) for x in range(n)] for y in range(m)]
+    output_field = [[0 for x in range(n)] for y in range(m)]
     
     for i_begin in range(0, n):
         i = i_begin
@@ -78,7 +84,7 @@ def diagonally_averaging_this(inputed_field, k):
 def test():
     averaging_width = 1
     w, h = 5, 3
-    input_field = [[0 for x in range(w)] for y in range(h)]
+    input_field = [[float(0) for x in range(w)] for y in range(h)]
     input_field[2][1] = 15
     print(input_field)
     temp_field=input_field
