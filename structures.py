@@ -47,6 +47,24 @@ def parse_plt(path: str):
     
     return StreamData(csvstr, i, j)
 
+def output_plt(data: StreamData, original_file, new_file, header=2):
+    with open(original_file, "r") as fo:
+        with open(new_file, "w") as fn:
+            for i in range(2):
+                line = fo.readline()
+                fn.write(line)
+
+            for i in data.dataset.values:
+                flag = True
+                for j in i:
+                    if not flag:
+                        fn.write("\t")
+                    else:
+                        flag = False
+                        
+                    fn.write(str(j))
+                fn.write("\n")
+
 def advance_to_vxu(data: StreamData):
     w, h = data.i, data.j
     output = [[float(0) for x in range(h)] for y in range(w)]
