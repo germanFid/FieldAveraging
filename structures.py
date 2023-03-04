@@ -12,6 +12,11 @@ class StreamData:
         self.i = i
         self.j = j
 
+    def get_dataset_line(self, i: int, j: int):
+        row = i + (j - 1) * self.j - 1
+        return self.dataset.iloc[[row]]
+
+
 def parse_plt(path: str):
     csvstr = ''
     i, j = 0, 0
@@ -35,7 +40,7 @@ def parse_plt(path: str):
         i = int(ij[2])
         j = int(ij[4])
 
-        for i in range(i * j):
+        for k in range(i * j):
             s = file.readline()
             s = s.replace("\t", ',')
             csvstr += s
