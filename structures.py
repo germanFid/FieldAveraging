@@ -47,10 +47,11 @@ def parse_plt(path: str):
     
     return StreamData(csvstr, i, j)
 
-def output_plt(data: StreamData, original_file, new_file, header=2):
+def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
     with open(original_file, "r") as fo:
         with open(new_file, "w") as fn:
-            for i in range(2):
+
+            for i in range(header):
                 line = fo.readline()
                 fn.write(line)
 
@@ -74,3 +75,11 @@ def advance_to_vxu(data: StreamData):
             output[i][j] = data.get_dataset_line(j, i)["Vx/U"].item()
 
     return output
+
+def update_dataset_column(data: StreamData, column: str, list):
+    n = 0
+    for i in range(data.i):
+        for j in range(data.j):
+            data.dataset.iloc[n][column] = list[i][j]
+            n += 1
+    
