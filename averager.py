@@ -31,7 +31,7 @@ def line_2_row_averaging_this(inputed_field, k):
     n = len(inputed_field[0])
     m = len(inputed_field)
 
-    output_field = [[0 for x in range(n)] for y in range(m)]
+    output_field = [[float(0) for x in range(n)] for y in range(m)]
     print(output_field) 
     for i in range(0, n):
         for j in range(0, m):
@@ -46,7 +46,7 @@ def diagonally_averaging_this(inputed_field, k):
     n = len(inputed_field[0])
     m = len(inputed_field)
 
-    output_field = [[0 for x in range(n)] for y in range(m)]
+    output_field = [[float(0) for x in range(n)] for y in range(m)]
     
     for i_begin in range(0, n):
         i = i_begin
