@@ -13,7 +13,7 @@ class StreamData:
         self.j = j
 
     def get_dataset_line(self, i: int, j: int):
-        row = i + (j - 1) * self.j - 1
+        row = i + j * self.j
         return self.dataset.iloc[[row]]
 
 
@@ -46,3 +46,13 @@ def parse_plt(path: str):
             csvstr += s
     
     return StreamData(csvstr, i, j)
+
+def advance_to_vxu(data: StreamData):
+    w, h = data.i, data.j
+    output = [[float(0) for x in range(h)] for y in range(w)]
+
+    for i in range(w):
+        for j in range(h):
+            output[i][j] = data.get_dataset_line(j, i)["Vx/U"].item()
+
+    return output
