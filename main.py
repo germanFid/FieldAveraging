@@ -1,6 +1,6 @@
 import numpy as np
 import argparse
-import pltparser
+import structures
 import averager
 
 from pprint import pprint
@@ -16,9 +16,10 @@ DEFAULT_HEADER = 2
 if args.Header:
     DEFAULT_HEADER = args.Header
 
-data = pltparser.ParsePlt(args.inputfile, '\t', DEFAULT_HEADER)
+data = structures.parse_plt(args.inputfile)
+print(data.dataset.to_string())
 
-averager.Test()
+# averager.test()
 
 # result = averager.FieldAveraging(data)
 

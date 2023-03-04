@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 class StreamData:
-    dataset = pd.DataFrame().empty
+    dataset = pd.DataFrame()
     i, j = 0, 0
 
     def __init__(self, csvstr: str, i: int, j: int):
@@ -12,7 +12,7 @@ class StreamData:
         self.i = i
         self.j = j
 
-def parse_plt(path):
+def parse_plt(path: str):
     csvstr = ''
     i, j = 0, 0
     with open(path, "r") as file:
