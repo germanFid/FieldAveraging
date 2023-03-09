@@ -2,7 +2,7 @@ import math
 
 MAX_HOR = 15
 MAX_VER = 3
-sigma = 1
+sigma = 3
 
 mtx = [0] * MAX_VER
 t_mtx = [0] * MAX_VER
@@ -10,11 +10,13 @@ for i in range(MAX_VER):
     mtx[i] = [0] * MAX_HOR
     t_mtx[i] = [0] * MAX_HOR
 
-mtx[0][0] = 5
-mtx[MAX_VER - 1][MAX_HOR - 1] = 5
+mtx[MAX_VER - 1][MAX_HOR - 1] = 15
+mtx[MAX_VER - 2][MAX_HOR - 2] = 15
+
+#mtx[MAX_VER - 1][MAX_HOR - 1] = 5
 for j in range(MAX_VER):
     for i in range(MAX_HOR):
-        print(mtx[j][i], end = "  ")
+        print('%4d' % mtx[j][i], end = "  ")
     print()
 print()
 
@@ -56,14 +58,16 @@ for j in range(MAX_VER):
                 t_elem += mtx[j][t_ind] * window[k + wnd_mid]
                 sum += window[k + wnd_mid]
         
-        tmp_hor[i] = float(t_elem) / sum
+        tmp_hor[i] = t_elem / sum
             
     
-    for t in range(MAX_HOR):
-        t_mtx[j][t] = tmp_hor[t]
+    # for t in range(MAX_HOR):
+    #     t_mtx[j][t] = tmp_hor[t]
+    t_mtx[j] = tmp_hor.copy()
 
 # important to copy after we've changed mtx
 mtx = t_mtx.copy()
+
 
 # ver aver sec
 
@@ -79,14 +83,14 @@ for i in range(MAX_HOR):
                 t_elem += mtx[t_ind][i] * window[k + wnd_mid]
                 sum += window[k + wnd_mid]
         
-        tmp_ver[j] = float(t_elem) / sum
+        tmp_ver[j] = t_elem / sum
     
     for t in range(MAX_VER):
         t_mtx[t][i] = tmp_ver[t]
 
-# important to copy after we've changed mtx
 mtx = t_mtx.copy()
 
+# testing output
 sum = 0
 for j in range(MAX_VER):
     for i in range(MAX_HOR):
@@ -94,9 +98,3 @@ for j in range(MAX_VER):
         print('%.2f' % mtx[j][i], end = "  ")
     print()
 print(sum)
-        
-            
-
-
-    
-
