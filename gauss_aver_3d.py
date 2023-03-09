@@ -17,8 +17,7 @@ for j in range(MAX_DEP):
     for i in range(MAX_VER):
         mtx[j][i] = [0] * MAX_HOR
         t_mtx[j][i] = [0] * MAX_HOR
-        
-        
+                
         
 mtx[0][MAX_VER - 1][MAX_HOR - 1] = 1500
 
