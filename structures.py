@@ -86,7 +86,7 @@ def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
                     fn.write(str(j))
                 fn.write("\n")
 
-def advance_to_vxu(data: StreamData) -> list[list(float)]:
+def advance_to_vxu(data: StreamData):
     """Outputs 2d list of Vx/U
 
     Returns:
@@ -101,6 +101,31 @@ def advance_to_vxu(data: StreamData) -> list[list(float)]:
             output[i][j] = data.get_dataset_line(j, i)["Vx/U"].item()
 
     return output
+
+def advance_to_column(data: StreamData, column_name: str):
+    """Outputs 2d list of column setting"""
+
+    column = data.dataset[column_name]
+
+    # Get the number of rows in the column
+    num_rows = column.shape[0]
+
+    # Create a list to hold the data
+    data_list = []
+
+    # Iterate over the rows of the column and append each value to the list
+    for i in range(num_rows):
+        data_list.append(column[i])
+
+    # Reshape the list into a 2D list with x and y dimensions
+    x_dim = data.i
+    y_dim = data.j
+
+    data_2d = [data_list[i:i+x_dim] for i in range(0, y_dim*x_dim, x_dim)]
+
+    # Return the result
+    return data_2d
+
 
 def update_dataset_column(data: StreamData, column: str, list):
     """Updates dataset column of StreamData
