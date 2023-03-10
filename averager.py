@@ -234,6 +234,7 @@ def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
     sum_of_elements = 0.0
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
+            print(len(in_field), len(in_field[0]), ii, jj)
             sum_of_elements = sum_of_elements+in_field[ii][jj]
     average_value = sum_of_elements / number_of_elements
     ij_value = average_value
@@ -254,7 +255,7 @@ def line_2_row_averaging_this_2d(inputed_field: list, radius: int) -> list:
     n = len(inputed_field)
     m = len(inputed_field[0])
 
-    output_field = [[float(0) for x in range(n)] for y in range(m)]
+    output_field = [[float(0) for y in range(m)] for x in range(n)]
     for i in range(0, n):
         for j in range(0, m):
             output_field[i][j] = average_this_2d_point(i, j, inputed_field, radius)
