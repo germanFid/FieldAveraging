@@ -133,37 +133,40 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
     m = len(in_field[0])
     d = len(in_field[0][0])
 
-    i_start = i-radius
+    i_start = i - radius
+    j_start = j - radius
+    k_start = k - radius
+    i_end = i + radius
+    j_end = j + radius
+    k_end = k + radius
+
     if i_start < 0:
         i_start = 0
-    j_start = j-radius
     if j_start < 0:
         j_start = 0
-    k_start = k-radius
     if k_start < 0:
         k_start = 0
-    i_end = i+radius
     if i_end > n-1:
         i_end = n-1
-    j_end = j+radius
     if j_end > m-1:
         j_end = m-1
-    k_end = k+radius
-    if k_end > d-1:
-        k_end = d-1
+    if k_end > m-1:
+        k_end = m-1
 
-    height = j_end-j_start+1
-    width = i_end-i_start+1
-    depth = k_end-k_start+1
-    if height == 0:
-        height = 1
+    width = i_end - i_start + 1
+    height = j_end - j_start + 1
+    depth = k_end - k_start + 1
+
     if width == 0:
         width = 1
+    if height == 0:
+        height = 1
     if depth == 0:
         depth = 1
 
     number_of_elements = width * height * depth
     sum_of_elements = 0.0
+    
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
             for kk in range(k_start, k_end+1):    
@@ -212,26 +215,31 @@ def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
     n = len(in_field)
     m = len(in_field[0])
     
-    i_start = i-radius
+    i_start = i - radius
+    j_start = j - radius
+    i_end = i + radius
+    j_end = j + radius
+
     if i_start < 0:
         i_start = 0
-    j_start = j-radius
     if j_start < 0:
         j_start = 0
-    i_end = i+radius
     if i_end > n-1:
         i_end = n-1
-    j_end = j+radius
     if j_end > m-1:
         j_end = m-1
-    height = j_end-j_start+1
-    width = i_end-i_start+1
+
+    width = i_end - i_start + 1
+    height = j_end - j_start + 1
+
     if height == 0:
         height = 1
     if width == 0:
         width = 1
+
     number_of_elements = width * height
     sum_of_elements = 0.0
+
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
             sum_of_elements = sum_of_elements+in_field[ii][jj]
