@@ -239,7 +239,6 @@ def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
 
     sum_of_elements = 0.0
     number_of_elements = width * height
-    print(number_of_elements)
     for ii in range(i_start, i_end+1):
         for jj in range(j_start, j_end+1):
             sum_of_elements = sum_of_elements+in_field[ii][jj]
