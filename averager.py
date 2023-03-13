@@ -5,15 +5,15 @@ def gauss_method(in_field, radius):
     MAX_VER = len(in_field[0])
     MAX_HOR = len(in_field[0][0])
 
-#-------------------------
+# -------------------------
     sigma = 5
     s2 = 2 * sigma * sigma
-#-------------------------
-   
+# -------------------------
+
     # matrix init
     t_mtx = [0] * MAX_DEP
     output_field = [0] * MAX_DEP
-    
+
     for i in range(MAX_DEP):
         t_mtx[i] = [0] * MAX_DEP
         output_field[i] = [0] * MAX_DEP
@@ -22,14 +22,14 @@ def gauss_method(in_field, radius):
         for i in range(MAX_VER):
             t_mtx[j][i] = [0] * MAX_HOR
             output_field[j][i] = [0] * MAX_HOR
-            
+
     output_field = in_field.copy()
-    
+
     wnd_mid = wnd_max_sz = max(max(MAX_DEP, MAX_HOR), MAX_VER)
     window = [0] * (2 * wnd_max_sz + 1)
     window[wnd_mid] = 1
     wnd_sz = math.ceil(3 * radius)
-    
+
     # temp arrays init of directions size
     tmp_hor = [0] * MAX_HOR
     tmp_ver = [0] * MAX_VER
@@ -39,16 +39,13 @@ def gauss_method(in_field, radius):
     for i in range(1, wnd_sz + 1):
         window[wnd_mid - i] = window[wnd_mid + i] = math.exp(- i * i / s2)
 
-    
     for z in range(MAX_DEP):
-        
-        
         # hor averagin first
         for y in range(MAX_VER):
             for x in range(MAX_HOR):
                 '''
                     we ll count summ of used normalized coefs.
-                    we have to do it each time cuz for averagin 
+                    we have to do it each time cuz for averagin
                     border elems we use only part of matrix
                 '''
                 sum = 0
@@ -57,20 +54,18 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     # temp index of nearest ones
                     t_ind = x + k
-                        
-                    if(t_ind >= 0 and t_ind < MAX_HOR):
+
+                    if (t_ind >= 0 and t_ind < MAX_HOR):
                         t_elem += output_field[z][y][t_ind] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_hor[x] = t_elem / sum
-                    
-            
+
             for t in range(MAX_HOR):
                 t_mtx[z][y][t] = tmp_hor[t]
 
         # important to copy after we've changed output_field
         output_field = t_mtx.copy()
-
 
         # ver aver sec
         for x in range(MAX_HOR):
@@ -81,17 +76,16 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     t_ind = y + k
 
-                    if(t_ind >= 0 and t_ind < MAX_VER):
+                    if (t_ind >= 0 and t_ind < MAX_VER):
                         t_elem += output_field[z][t_ind][x] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_ver[y] = t_elem / sum
-            
+
             for t in range(MAX_VER):
                 t_mtx[z][t][x] = tmp_ver[t]
 
         output_field = t_mtx.copy()
-
 
         # depth aver
         for x in range(MAX_HOR):
@@ -102,17 +96,17 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     t_ind = z + k
 
-                    if(t_ind >= 0 and t_ind < MAX_VER):
+                    if (t_ind >= 0 and t_ind < MAX_VER):
                         t_elem += output_field[t_ind][y][x] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_dep[z] = t_elem / sum
-            
+
             for t in range(MAX_DEP):
                 t_mtx[t][y][x] = tmp_dep[t]
 
         output_field = t_mtx.copy()
-  
+
     return output_field
 
 
