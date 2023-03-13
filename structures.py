@@ -1,6 +1,6 @@
-import numpy as np
 import pandas as pd
 import io
+
 
 class StreamData:
     """Field information class"""
@@ -55,8 +55,9 @@ def parse_plt(path: str) -> StreamData:
             s = file.readline()
             s = s.replace("\t", ',')
             csvstr += s
-    
+
     return StreamData(csvstr, i, j)
+
 
 def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
     """Outputs StreamData to file
@@ -82,9 +83,10 @@ def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
                         fn.write("\t")
                     else:
                         flag = False
-                        
+
                     fn.write(str(j))
                 fn.write("\n")
+
 
 def advance_to_vxu(data: StreamData):
     """Outputs 2d list of Vx/U
@@ -92,7 +94,7 @@ def advance_to_vxu(data: StreamData):
     Returns:
         2dList
     """
-    
+
     w, h = data.i, data.j
     output = [[float(0) for x in range(h)] for y in range(w)]
 
@@ -101,6 +103,7 @@ def advance_to_vxu(data: StreamData):
             output[i][j] = data.get_dataset_line(j, i)["Vx/U"].item()
 
     return output
+
 
 def advance_to_column(data: StreamData, column_name: str):
     """Outputs 2d list of column setting"""
@@ -121,7 +124,7 @@ def advance_to_column(data: StreamData, column_name: str):
     x_dim = data.i
     y_dim = data.j
 
-    data_2d = [data_list[i:i+x_dim] for i in range(0, y_dim*x_dim, x_dim)]
+    data_2d = [data_list[i:i + x_dim] for i in range(0, y_dim * x_dim, x_dim)]
 
     # Return the result
     return data_2d
@@ -141,4 +144,3 @@ def update_dataset_column(data: StreamData, column: str, list):
         for j in range(data.j):
             data.dataset.iloc[n][column] = list[i][j]
             n += 1
-    
