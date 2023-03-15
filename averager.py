@@ -5,15 +5,15 @@ def gauss_method(in_field, radius):
     MAX_VER = len(in_field[0])
     MAX_HOR = len(in_field[0][0])
 
-#-------------------------
+# -------------------------
     sigma = 5
     s2 = 2 * sigma * sigma
-#-------------------------
-   
+# -------------------------
+
     # matrix init
     t_mtx = [0] * MAX_DEP
     output_field = [0] * MAX_DEP
-    
+
     for i in range(MAX_DEP):
         t_mtx[i] = [0] * MAX_DEP
         output_field[i] = [0] * MAX_DEP
@@ -22,14 +22,14 @@ def gauss_method(in_field, radius):
         for i in range(MAX_VER):
             t_mtx[j][i] = [0] * MAX_HOR
             output_field[j][i] = [0] * MAX_HOR
-            
+
     output_field = in_field.copy()
-    
+
     wnd_mid = wnd_max_sz = max(max(MAX_DEP, MAX_HOR), MAX_VER)
     window = [0] * (2 * wnd_max_sz + 1)
     window[wnd_mid] = 1
     wnd_sz = math.ceil(3 * radius)
-    
+
     # temp arrays init of directions size
     tmp_hor = [0] * MAX_HOR
     tmp_ver = [0] * MAX_VER
@@ -39,16 +39,13 @@ def gauss_method(in_field, radius):
     for i in range(1, wnd_sz + 1):
         window[wnd_mid - i] = window[wnd_mid + i] = math.exp(- i * i / s2)
 
-    
     for z in range(MAX_DEP):
-        
-        
         # hor averagin first
         for y in range(MAX_VER):
             for x in range(MAX_HOR):
                 '''
                     we ll count summ of used normalized coefs.
-                    we have to do it each time cuz for averagin 
+                    we have to do it each time cuz for averagin
                     border elems we use only part of matrix
                 '''
                 sum = 0
@@ -57,20 +54,18 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     # temp index of nearest ones
                     t_ind = x + k
-                        
-                    if(t_ind >= 0 and t_ind < MAX_HOR):
+
+                    if (t_ind >= 0 and t_ind < MAX_HOR):
                         t_elem += output_field[z][y][t_ind] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_hor[x] = t_elem / sum
-                    
-            
+
             for t in range(MAX_HOR):
                 t_mtx[z][y][t] = tmp_hor[t]
 
         # important to copy after we've changed output_field
         output_field = t_mtx.copy()
-
 
         # ver aver sec
         for x in range(MAX_HOR):
@@ -81,17 +76,16 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     t_ind = y + k
 
-                    if(t_ind >= 0 and t_ind < MAX_VER):
+                    if (t_ind >= 0 and t_ind < MAX_VER):
                         t_elem += output_field[z][t_ind][x] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_ver[y] = t_elem / sum
-            
+
             for t in range(MAX_VER):
                 t_mtx[z][t][x] = tmp_ver[t]
 
         output_field = t_mtx.copy()
-
 
         # depth aver
         for x in range(MAX_HOR):
@@ -102,22 +96,37 @@ def gauss_method(in_field, radius):
                 for k in range(-wnd_sz, wnd_sz + 1):
                     t_ind = z + k
 
-                    if(t_ind >= 0 and t_ind < MAX_VER):
+                    if (t_ind >= 0 and t_ind < MAX_VER):
                         t_elem += output_field[t_ind][y][x] * window[k + wnd_mid]
                         sum += window[k + wnd_mid]
-                
+
                 tmp_dep[z] = t_elem / sum
-            
+
             for t in range(MAX_DEP):
                 t_mtx[t][y][x] = tmp_dep[t]
 
         output_field = t_mtx.copy()
-    
+
     return output_field
 
 
+def get_start_end_lenght(coordinate: int, radius: int, max_coordinate: int) -> list:
+    start_end_lenght = list()
+    start_end_lenght.append(coordinate - radius)
+    start_end_lenght.append(coordinate + radius)
+    if start_end_lenght[0] < 0:
+        start_end_lenght[0] = 0
+    if start_end_lenght[1] > max_coordinate - 1:
+        start_end_lenght[1] = max_coordinate - 1
+    start_end_lenght.append(start_end_lenght[1] - start_end_lenght[0] + 1)
+    if start_end_lenght[2] == 0:
+        start_end_lenght[2] = 1
+    return start_end_lenght
+
+
 def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -> float:
-    """Basic method of 3-Dimensional averaging. Takes average value of all point around given point with given radius.
+    """Basic method of 3-Dimensional averaging. Takes average value of
+    all point around given point with given radius.
 
     Args:
         i (int): index in row
@@ -132,49 +141,22 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
     n = len(in_field)
     m = len(in_field[0])
     d = len(in_field[0][0])
-
-    i_start = i-radius
-    if i_start < 0:
-        i_start = 0
-    j_start = j-radius
-    if j_start < 0:
-        j_start = 0
-    k_start = k-radius
-    if k_start < 0:
-        k_start = 0
-    i_end = i+radius
-    if i_end > n-1:
-        i_end = n-1
-    j_end = j+radius
-    if j_end > m-1:
-        j_end = m-1
-    k_end = k+radius
-    if k_end > d-1:
-        k_end = d-1
-
-    height = j_end-j_start+1
-    width = i_end-i_start+1
-    depth = k_end-k_start+1
-    if height == 0:
-        height = 1
-    if width == 0:
-        width = 1
-    if depth == 0:
-        depth = 1
-
-    number_of_elements = width * height * depth
+    i_set = get_start_end_lenght(i, radius, n)
+    j_set = get_start_end_lenght(j, radius, m)
+    k_set = get_start_end_lenght(k, radius, d)
     sum_of_elements = 0.0
-    for ii in range(i_start, i_end+1):
-        for jj in range(j_start, j_end+1):
-            for kk in range(k_start, k_end+1):    
-                sum_of_elements = sum_of_elements+in_field[ii][jj][kk]
+    number_of_elements = i_set[2] * j_set[2] * k_set[2]
+    for ii in range(i_set[0], i_set[1] + 1):
+        for jj in range(j_set[0], j_set[1] + 1):
+            for kk in range(k_set[0], k_set[1] + 1):
+                sum_of_elements = sum_of_elements + in_field[ii][jj][kk]
     average_value = sum_of_elements / number_of_elements
     ijk_value = average_value
 
     return ijk_value
 
 
-def line_2_row_averaging_this_3d(inputed_field: list, radius: int) -> list:
+def basic_3d_array_averaging(inputed_field: list, radius: int) -> list:
     """Function takes field and use basic 3d averaging method. Gives back averaged field
 
     Args:
@@ -196,8 +178,9 @@ def line_2_row_averaging_this_3d(inputed_field: list, radius: int) -> list:
     return output_field
 
 
-def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float: 
-    """Basic method of 2-Dimensional averaging. Takes average value of all point around given point with given radius.
+def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
+    """Basic method of 2-Dimensional averaging. Takes average value of
+    all point around given point with given radius.
 
     Args:
         i (int): index in row
@@ -211,38 +194,21 @@ def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
 
     n = len(in_field)
     m = len(in_field[0])
-    
-    i_start = i-radius
-    if i_start < 0:
-        i_start = 0
-    j_start = j-radius
-    if j_start < 0:
-        j_start = 0
-    i_end = i+radius
-    if i_end > n-1:
-        i_end = n-1
-    j_end = j+radius
-    if j_end > m-1:
-        j_end = m-1
-    height = j_end-j_start+1
-    width = i_end-i_start+1
-    if height == 0:
-        height = 1
-    if width == 0:
-        width = 1
-    number_of_elements = width * height
+    i_set = get_start_end_lenght(i, radius, n)
+    j_set = get_start_end_lenght(j, radius, m)
     sum_of_elements = 0.0
-    for ii in range(i_start, i_end+1):
-        for jj in range(j_start, j_end+1):
-            sum_of_elements = sum_of_elements+in_field[ii][jj]
+    number_of_elements = i_set[2] * j_set[2]
+    for ii in range(i_set[0], i_set[1] + 1):
+        for jj in range(j_set[0], j_set[1] + 1):
+            sum_of_elements = sum_of_elements + in_field[ii][jj]
     average_value = sum_of_elements / number_of_elements
-    ij_value = average_value
 
-    return ij_value
+    return average_value
 
 
-def line_2_row_averaging_this_2d(inputed_field: list, radius: int) -> list:
-    """Basic method of 2-Dimensional averaging. Takes average value of all point around given point with given radius.
+def basic_2d_array_averaging(inputed_field: list, radius: int) -> list:
+    """Basic method of 2-Dimensional averaging. Takes average value of
+    all point around given point with given radius.
 
     Args:
         inputed_field (list): field to get averaged
@@ -267,6 +233,4 @@ def test():
     input_field = [[float(0) for y in range(h)] for x in range(w)]
     input_field[4][2] = 15
     print(input_field)
-    print(line_2_row_averaging_this_2d(input_field, averaging_width))
-    print(gauss_method(input_field, averaging_width))
-
+    print(basic_2d_array_averaging(input_field, averaging_width))
