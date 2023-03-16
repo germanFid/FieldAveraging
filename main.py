@@ -1,6 +1,5 @@
 import argparse
 import structures
-import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('inputfile', help='input plt file')
