@@ -1,3 +1,7 @@
+import multiprocessing
+import numpy as np
+from tqdm import tqdm
+
 def gauss_method(in_field, radius):
     import math
 
@@ -178,35 +182,50 @@ def basic_3d_array_averaging(inputed_field: list, radius: int) -> list:
     return output_field
 
 
-def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
-    """Basic method of 2-Dimensional averaging. Takes average value of
-    all point around given point with given radius.
+# def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
+#     """Basic method of 2-Dimensional averaging. Takes average value of
+#     all point around given point with given radius.
 
-    Args:
-        i (int): index in row
-        j (int): index in column
-        in_field (list): field to get average value from
-        radius (int): averaging radius around this point
+#     Args:
+#         i (int): index in row
+#         j (int): index in column
+#         in_field (list): field to get average value from
+#         radius (int): averaging radius around this point
 
-    Returns:
-        float: peasantly averaged value of our 2d point in field
-    """
+#     Returns:
+#         float: peasantly averaged value of our 2d point in field
+#     """
 
-    n = len(in_field)
-    m = len(in_field[0])
-    i_set = get_start_end_lenght(i, radius, n)
-    j_set = get_start_end_lenght(j, radius, m)
-    sum_of_elements = 0.0
-    number_of_elements = i_set[2] * j_set[2]
-    for ii in range(i_set[0], i_set[1] + 1):
-        for jj in range(j_set[0], j_set[1] + 1):
-            sum_of_elements = sum_of_elements + in_field[ii][jj]
-    average_value = sum_of_elements / number_of_elements
+#     n = len(in_field)
+#     m = len(in_field[0])
+#     i_set = get_start_end_lenght(i, radius, n)
+#     j_set = get_start_end_lenght(j, radius, m)
+#     sum_of_elements = 0.0
+#     number_of_elements = i_set[2] * j_set[2]
+#     for ii in range(i_set[0], i_set[1] + 1):
+#         for jj in range(j_set[0], j_set[1] + 1):
+#             sum_of_elements = sum_of_elements + in_field[ii][jj]
+#     average_value = sum_of_elements / number_of_elements
 
-    return average_value
+#     return average_value
 
 
-def basic_2d_array_averaging(inputed_field: list, radius: int) -> list:
+def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> float:
+    n, m = in_field.shape
+
+    i_start = max(0, i - radius)
+    i_end = min(n - 1, i + radius)
+
+    j_start = max(0, j - radius)
+    j_end = min(m - 1, j + radius)
+
+    window_size = (i_end - i_start + 1) * (j_end - j_start + 1)
+    window_sum = np.sum(in_field[i_start:i_end + 1, j_start:j_end + 1])
+
+    return window_sum / window_size
+
+
+def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int, visuals: bool = False) -> list:
     """Basic method of 2-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
@@ -221,9 +240,45 @@ def basic_2d_array_averaging(inputed_field: list, radius: int) -> list:
     m = len(inputed_field[0])
 
     output_field = [[float(0) for y in range(m)] for x in range(n)]
+
+    if visuals:
+        with tqdm(total=n * m) as pbar:
+            for i in range(n):
+                for j in range(m):
+                    output_field[i][j] = average_this_2d_point(i, j, inputed_field, radius)
+                    pbar.update(1)
+
+    else:
+        for i in range(n):
+            for j in range(m):
+                output_field[i][j] = average_this_2d_point(i, j, inputed_field, radius)
+
+    return output_field
+
+
+def process_func(args):
+    i, j, inputed_field, radius, average_this_2d_point_func = args
+    return average_this_2d_point_func(i, j, inputed_field, radius)
+
+
+def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
+                                      radius: int, max_processes: int) -> list:
+    n = len(inputed_field)
+    m = len(inputed_field[0])
+
+    output_field = [[float(0) for y in range(m)] for x in range(n)]
+
+    pool = multiprocessing.Pool(processes=max_processes)
+    args_list = [(i, j, inputed_field, radius, average_this_2d_point) for i in range(n) for j in range(m)]
+    results = pool.map(process_func, args_list)
+    pool.close()
+
+    k = 0
     for i in range(0, n):
         for j in range(0, m):
-            output_field[i][j] = average_this_2d_point(i, j, inputed_field, radius)
+            output_field[i][j] = results[k]
+            k += 1
+
     return output_field
 
 
