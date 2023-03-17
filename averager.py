@@ -49,7 +49,7 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
     return ijk_value
 
 
-def basic_3d_array_averaging(inputed_field: list, radius: int) -> list:
+def basic_3d_array_averaging(inputed_field: list, radius: int) -> np.ndarray:
     """Function takes field and use basic 3d averaging method. Gives back averaged field
 
     Args:
