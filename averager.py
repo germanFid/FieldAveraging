@@ -49,7 +49,7 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
     return ijk_value
 
 
-def basic_3d_array_averaging(inputed_field: list, radius: int) -> list:
+def basic_3d_array_averaging(inputed_field: list, radius: int) -> np.ndarray:
     """Function takes field and use basic 3d averaging method. Gives back averaged field
 
     Args:
@@ -114,7 +114,7 @@ def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> 
     return window_sum / window_size
 
 
-def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int, visuals: bool = False) -> list:
+def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int, visuals: bool = False) -> np.ndarray:
     """Basic method of 2-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
@@ -125,10 +125,10 @@ def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int, visuals: bo
     Returns:
         list: peasantly averaged 2d field
     """
-    n = len(inputed_field)
-    m = len(inputed_field[0])
-
-    output_field = [[float(0) for y in range(m)] for x in range(n)]
+    inputed_field = np.array(inputed_field)
+    n, m = inputed_field.shape
+    
+    output_field = np.zeros((n,m))
 
     if visuals:
         with tqdm(total=n * m) as pbar:
@@ -152,11 +152,11 @@ def process_func(args):
 
 def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
                                       radius: int, max_processes: int,
-                                      visuals: bool = False) -> list:
-    n = len(inputed_field)
-    m = len(inputed_field[0])
+                                      visuals: bool = False) -> np.ndarray:
+    inputed_field = np.array(inputed_field)
+    n, m = inputed_field.shape
 
-    output_field = [[float(0) for y in range(m)] for x in range(n)]
+    output_field = np.zeros((n,m))
 
     pool = multiprocessing.Pool(processes=max_processes)
     args_list = [(i, j, inputed_field, radius, average_this_2d_point)
