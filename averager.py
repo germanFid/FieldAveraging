@@ -114,21 +114,23 @@ def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> 
     return window_sum / window_size
 
 
-def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int, visuals: bool = False) -> np.ndarray:
+def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int,
+                             visuals: bool = False) -> np.ndarray:
     """Basic method of 2-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
     Args:
-        inputed_field (list): field to get averaged
+        inputed_field (NDArray): field to get averaged
         radius (int): averaging radius around this point
+        visuals (bool): enables progress bar verbose
 
     Returns:
-        list: peasantly averaged 2d field
+        NDArray: peasantly averaged 2d field
     """
-    inputed_field = np.array(inputed_field)
+
     n, m = inputed_field.shape
-    
-    output_field = np.zeros((n,m))
+
+    output_field = np.zeros((n, m))
 
     if visuals:
         with tqdm(total=n * m) as pbar:
@@ -151,12 +153,24 @@ def process_func(args):
 
 
 def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
-                                      radius: int, max_processes: int,
+                                      radius: int, max_processes: int = 4,
                                       visuals: bool = False) -> np.ndarray:
-    inputed_field = np.array(inputed_field)
+    """Basic method of 2-Dimensional averaging using parallel computations.
+    Takes average value of all point around given point with given radius.
+
+    Args:
+        inputed_field (NDArray): field to get averaged
+        radius (int): averaging radius around this point
+        max_processes (int): maximum of processes to use
+        visuals (bool): enables progress bar verbose
+
+    Returns:
+        NDArray: peasantly averaged 2d field
+    """
+
     n, m = inputed_field.shape
 
-    output_field = np.zeros((n,m))
+    output_field = np.zeros((n, m))
 
     pool = multiprocessing.Pool(processes=max_processes)
     args_list = [(i, j, inputed_field, radius, average_this_2d_point)
@@ -165,12 +179,12 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     chunksize = int(max([1, (n * m) / (4 * max_processes)]))
 
     if visuals:
-        results = list(tqdm(pool.imap_unordered(process_func, args_list, chunksize=chunksize),
+        results = list(tqdm(pool.imap(process_func, args_list, chunksize=chunksize),
                             total=(n * m), miniters=1000))
 
     else:
-        results = list(pool.imap_unordered(process_func, args_list, chunksize=chunksize),
-                       total=(n * m), miniters=1000)
+        results = list(pool.imap(process_func, args_list, chunksize=chunksize))
+
     pool.close()
 
     k = 0
