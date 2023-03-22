@@ -166,12 +166,3 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
             k += 1
 
     return output_field
-
-
-def test():
-    averaging_width = 1
-    w, h = 5, 3
-    input_field = [[float(0) for y in range(h)] for x in range(w)]
-    input_field[4][2] = 15
-    print(input_field)
-    print(basic_2d_array_averaging(input_field, averaging_width))
