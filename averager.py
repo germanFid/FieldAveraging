@@ -71,34 +71,6 @@ def basic_3d_array_averaging(inputed_field: list, radius: int) -> np.ndarray:
     return output_field
 
 
-# def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
-#     """Basic method of 2-Dimensional averaging. Takes average value of
-#     all point around given point with given radius.
-
-#     Args:
-#         i (int): index in row
-#         j (int): index in column
-#         in_field (list): field to get average value from
-#         radius (int): averaging radius around this point
-
-#     Returns:
-#         float: peasantly averaged value of our 2d point in field
-#     """
-
-#     n = len(in_field)
-#     m = len(in_field[0])
-#     i_set = get_start_end_lenght(i, radius, n)
-#     j_set = get_start_end_lenght(j, radius, m)
-#     sum_of_elements = 0.0
-#     number_of_elements = i_set[2] * j_set[2]
-#     for ii in range(i_set[0], i_set[1] + 1):
-#         for jj in range(j_set[0], j_set[1] + 1):
-#             sum_of_elements = sum_of_elements + in_field[ii][jj]
-#     average_value = sum_of_elements / number_of_elements
-
-#     return average_value
-
-
 def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> float:
     n, m = in_field.shape
 
