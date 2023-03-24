@@ -3,21 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-def get_start_end_lenght(coordinate: int, radius: int, max_coordinate: int) -> list:
-    start_end_lenght = list()
-    start_end_lenght.append(coordinate - radius)
-    start_end_lenght.append(coordinate + radius)
-    if start_end_lenght[0] < 0:
-        start_end_lenght[0] = 0
-    if start_end_lenght[1] > max_coordinate - 1:
-        start_end_lenght[1] = max_coordinate - 1
-    start_end_lenght.append(start_end_lenght[1] - start_end_lenght[0] + 1)
-    if start_end_lenght[2] == 0:
-        start_end_lenght[2] = 1
-    return start_end_lenght
-
-
-def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -> float:
+def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: int) -> float:
     """Basic method of 3-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
@@ -25,7 +11,7 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
         i (int): index in row
         j (int): index in column
         k (int): index in depth
-        in_field (list): field to get average value from
+        in_field (np.ndarray): field to get average value from
         radius (int): averaging radius around this point
 
     Returns:
@@ -34,40 +20,52 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: list, radius: int) -
     n = len(in_field)
     m = len(in_field[0])
     d = len(in_field[0][0])
-    i_set = get_start_end_lenght(i, radius, n)
-    j_set = get_start_end_lenght(j, radius, m)
-    k_set = get_start_end_lenght(k, radius, d)
-    sum_of_elements = 0.0
-    number_of_elements = i_set[2] * j_set[2] * k_set[2]
-    for ii in range(i_set[0], i_set[1] + 1):
-        for jj in range(j_set[0], j_set[1] + 1):
-            for kk in range(k_set[0], k_set[1] + 1):
-                sum_of_elements = sum_of_elements + in_field[ii][jj][kk]
-    average_value = sum_of_elements / number_of_elements
-    ijk_value = average_value
+    
+    i_start = max(0, i - radius)
+    i_end = min(n - 1, i + radius)
+    
+    j_start = max(0, j - radius)
+    j_end = min(m - 1, j + radius)
+    
+    k_start = max(0, k - radius)
+    k_end = min(d - 1, k + radius)
+    
+    window_size = (i_end - i_start + 1) * (j_end - j_start + 1) * (k_end - k_start + 1)
+    window_sum = np.sum(in_field[i_start:i_end + 1, j_start:j_end + 1, k_start:k_end + 1])
 
-    return ijk_value
+    return window_sum / window_size
 
 
-def basic_3d_array_averaging(inputed_field: list, radius: int) -> np.ndarray:
+def basic_3d_array_averaging(inputed_field: np.ndarray, radius: int,
+                             visuals: bool = False) -> np.ndarray:
     """Function takes field and use basic 3d averaging method. Gives back averaged field
 
     Args:
-        inputed_field (list): field to get averaged
+        inputed_field (np.ndarray): field to get averaged
         radius (int): averaging radius around this point
 
     Returns:
-        list: peasantly averaged 3d field
+        np.ndarray: peasantly averaged 3d field
     """
     n = len(inputed_field)
     m = len(inputed_field[0])
     d = len(inputed_field[0][0])
 
-    output_field = [[[float(0) for z in range(d)] for y in range(m)] for x in range(n)]
-    for i in range(0, n):
-        for j in range(0, m):
-            for k in range(0, d):
-                output_field[i][j][k] = average_this_3d_point(i, j, k, inputed_field, radius)
+    output_field = np.zeros((n, m, d))
+    
+    if visuals:
+        with tqdm(total=n * m * d) as pbar:
+            for i in range(n):
+                for j in range(m):
+                    for k in range(d):
+                        output_field[i][j][k] = average_this_3d_point(i, j, k, inputed_field, radius)
+                        pbar.update(1)
+    else:
+        for i in range(n):
+            for j in range(m):
+                for k in range(d):
+                    output_field[i][j][k] = average_this_3d_point(i, j, k, inputed_field, radius)
+                        
     return output_field
 
 
