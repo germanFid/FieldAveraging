@@ -3,7 +3,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.colors import Normalize
 
 
-def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None, show_axes=True, show_colorbar=False, figsize=(6, 6), subplot_widths=None, font_size=12, nrows=1, normalize=None):
+def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None, show_axes=True, show_colorbar=False, figsize=(6, 6), font_size=12, nrows=1, normalize=None):
     # Determine the number of figures in the list
     num_figures = len(figures)
     # Determine the number of rows and columns of subplots
@@ -47,8 +47,8 @@ def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None, show_a
             fig.colorbar(im, ax=ax)
 
     # Adjust the spacing between subplots and show the figure
-    plt.subplots_adjust(wspace=0.1)
-    plt.subplots_adjust(hspace=0.1)
+    plt.subplots_adjust(wspace=0.05)
+    plt.subplots_adjust(hspace=0.05)
     return fig
 
 
