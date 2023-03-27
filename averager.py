@@ -83,9 +83,9 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
         NDArray: peasantly averaged 2d field
     """
     n, m, d = inputed_field.shape
-    output_field = np.zeros((n, m))
+    output_field = np.zeros((n, m, d))
     pool = multiprocessing.Pool(processes=max_processes)
-    args_list = [(i, j, k, inputed_field, radius, average_this_2d_point)
+    args_list = [(i, j, k, inputed_field, radius, average_this_3d_point)
                  for i in range(n) for j in range(m) for k in range(d)]
     chunksize = int(max([1, (n * m * d) / (4 * max_processes)]))
     if visuals:
@@ -98,7 +98,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
     for i in range(0, n):
         for j in range(0, m):
             for k in range(0, d):
-                output_field[i][j] = results[f]
+                output_field[i][j][k] = results[f]
                 f += 1
 
     return output_field
