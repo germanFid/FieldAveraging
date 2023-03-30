@@ -1,9 +1,5 @@
-import numpy as np
 import argparse
 import structures
-import averager
-
-from pprint import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('inputfile', help='input plt file')
