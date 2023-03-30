@@ -181,6 +181,186 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     return output_field
 
 
+def gauss_wnd_init(sigma):
+
+    wnd_sz = np.ceil(3 * sigma)
+    window = [0] * (2 * wnd_sz + 1)
+    s2 = 2 * sigma * sigma
+    const = np.sqrt(2 * np.pi) * sigma
+
+    window[wnd_sz] = 1
+    for i in range(1, wnd_sz + 1):
+        window[wnd_sz - i] = window[wnd_sz + i] = np.exp(- i * i / s2) / const
+
+    return window
+
+
+def ver_aver_3(mtx, window, wnd_sz, MAX_VER, x, z):
+
+    t_mtx = np.zeros(MAX_VER)
+    for i in range(MAX_VER):
+        t_mtx[i] = mtx[z][i][x]
+
+    for y in range(MAX_VER):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + y
+
+            if (t_ind >= 0 and t_ind < MAX_VER):
+                t_elem += mtx[z][t_ind][x] * window[w_ind]
+            sum += window[w_ind]
+            # if u ll put this ```sum +=window[w_ind]``` in under if (in all gauss funcs)
+            # then gauss will become limited by borders of initial array
+        if (sum != 0):
+            t_mtx[y] = t_elem / sum
+
+    for i in range(MAX_VER):
+        mtx[z][i][x] = t_mtx[i]
+
+
+def hor_aver_3(mtx, window, wnd_sz, MAX_HOR, y, z):
+
+    t_mtx = np.zeros(MAX_HOR)
+    for i in range(MAX_HOR):
+        t_mtx[i] = mtx[z][y][i]
+
+    for x in range(MAX_HOR):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + x
+
+            if (t_ind >= 0 and t_ind < MAX_HOR):
+                t_elem += mtx[z][y][t_ind] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[x] = t_elem / sum
+
+    for i in range(MAX_HOR):
+        mtx[z][y][i] = t_mtx[i]
+
+
+def dep_aver_3(mtx, window, wnd_sz, MAX_DEP, x, y):
+
+    t_mtx = np.zeros(MAX_DEP)
+    for i in range(MAX_DEP):
+        t_mtx[i] = mtx[i][y][x]
+
+    for z in range(MAX_DEP):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + z
+
+            if (t_ind >= 0 and t_ind < MAX_DEP):
+                t_elem += mtx[t_ind][y][x] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[z] = t_elem / sum
+
+    for i in range(MAX_DEP):
+        mtx[i][y][x] = t_mtx[i]
+
+
+def ver_aver_2(mtx, window, wnd_sz, MAX_VER, x):
+
+    t_mtx = np.zeros(MAX_VER)
+    for i in range(MAX_VER):
+        t_mtx[i] = mtx[i][x]
+
+    for y in range(MAX_VER):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + y
+
+            if (t_ind >= 0 and t_ind < MAX_VER):
+                t_elem += mtx[t_ind][x] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[y] = t_elem / sum
+
+    for i in range(MAX_VER):
+        mtx[i][x] = t_mtx[i]
+
+
+def hor_aver_2(mtx, window, wnd_sz, MAX_HOR, y):
+
+    t_mtx = np.zeros(MAX_HOR)
+    for i in range(MAX_HOR):
+        t_mtx[i] = mtx[y][i]
+
+    for x in range(MAX_HOR):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + x
+
+            if (t_ind >= 0 and t_ind < MAX_HOR):
+                t_elem += mtx[y][t_ind] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[x] = t_elem / sum
+
+    for i in range(MAX_HOR):
+        mtx[y][i] = t_mtx[i]
+
+
+def gauss_3d(in_field, sigma):
+
+    MAX_DEP = len(in_field)
+    MAX_VER = len(in_field[0])
+    MAX_HOR = len(in_field[0][0])
+
+    mtx = in_field.copy()
+
+    window = gauss_wnd_init(sigma)
+    wnd_sz = np.ceil(3 * sigma)
+
+    for z in range(MAX_DEP):
+
+        for y in range(MAX_VER):
+            hor_aver_3(mtx, window, wnd_sz, MAX_HOR, y, z)
+
+        for x in range(MAX_HOR):
+            ver_aver_3(mtx, window, wnd_sz, MAX_VER, x, z)
+
+    for x in range(MAX_HOR):
+        for y in range(MAX_VER):
+            dep_aver_3(mtx, window, wnd_sz, MAX_DEP, x, y)
+
+    return mtx
+
+
+def gauss_2d(in_field, sigma):
+
+    MAX_VER = len(in_field)
+    MAX_HOR = len(in_field[0])
+
+    mtx = in_field.copy()
+
+    window = gauss_wnd_init(sigma)
+    wnd_sz = np.ceil(3 * sigma)
+
+    for y in range(MAX_VER):
+        hor_aver_2(mtx, window, wnd_sz, MAX_HOR, y)
+
+    for x in range(MAX_HOR):
+        ver_aver_2(mtx, window, wnd_sz, MAX_VER, x)
+
+    return mtx
+
+
 def test():
     averaging_width = 1
     w, h = 5, 3
