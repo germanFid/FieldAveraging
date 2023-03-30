@@ -188,8 +188,8 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
 
 def gauss_wnd_init(sigma: int) -> np.ndarray:
 
-    wnd_sz = np.ceil(3 * sigma)
-    window = np.zeros(2 * wnd_sz + 1)
+    wnd_sz = int(np.ceil(3 * sigma))
+    window = np.zeros((2 * wnd_sz + 1))
     s2 = 2 * sigma * sigma
     const = np.sqrt(2 * np.pi) * sigma
 
@@ -340,7 +340,7 @@ def gauss_3d(in_field: np.ndarray, sigma: int) -> np.ndarray:
     mtx = in_field.copy()
 
     window = gauss_wnd_init(sigma)
-    wnd_sz = np.ceil(3 * sigma)
+    wnd_sz = int(np.ceil(3 * sigma))
 
     for z in range(MAX_DEP):
 
@@ -376,7 +376,7 @@ def gauss_2d(in_field, sigma) -> np.ndarray:
     mtx = in_field.copy()
 
     window = gauss_wnd_init(sigma)
-    wnd_sz = np.ceil(3 * sigma)
+    wnd_sz = int(np.ceil(3 * sigma))
 
     for y in range(MAX_VER):
         hor_aver_2(mtx, window, wnd_sz, MAX_HOR, y)
