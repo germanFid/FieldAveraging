@@ -17,9 +17,7 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: 
     Returns:
         float: peasantly averaged value of our 3d point in field
     """
-    n = len(in_field)
-    m = len(in_field[0])
-    d = len(in_field[0][0])
+    n, m, d = in_field.shape
     i_start = max(0, i - radius)
     i_end = min(n - 1, i + radius)
     j_start = max(0, j - radius)
@@ -42,9 +40,7 @@ def basic_3d_array_averaging(inputed_field: np.ndarray, radius: int,
     Returns:
         np.ndarray: peasantly averaged 3d field
     """
-    n = len(inputed_field)
-    m = len(inputed_field[0])
-    d = len(inputed_field[0][0])
+    n, m, d = inputed_field.shape
     output_field = np.zeros((n, m, d))
     if visuals:
         with tqdm(total=n * m * d) as pbar:
