@@ -4,7 +4,8 @@ from tqdm import tqdm
 
 
 def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: int) -> float:
-    """Basic method of 3-Dimensional averaging. Takes average value of
+    """
+    Basic method of 3-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
     Args:
@@ -31,7 +32,8 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: 
 
 def basic_3d_array_averaging(inputed_field: np.ndarray, radius: int,
                              visuals: bool = False) -> np.ndarray:
-    """Function takes field and use basic 3d averaging method. Gives back averaged field
+    """
+    Function takes field and use basic 3d averaging method. Gives back averaged field
 
     Args:
         inputed_field (np.ndarray): field to get averaged
@@ -66,7 +68,8 @@ def process_func_3d(args):
 def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
                                       radius: int, max_processes: int = 4,
                                       visuals: bool = False) -> np.ndarray:
-    """Basic method of 3-Dimensional averaging using parallel computations.
+    """
+    Basic method of 3-Dimensional averaging using parallel computations.
     Takes average value of all point around given point with given radius.
 
     Args:
@@ -114,7 +117,8 @@ def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> 
 
 def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int,
                              visuals: bool = False) -> np.ndarray:
-    """Basic method of 2-Dimensional averaging. Takes average value of
+    """
+    Basic method of 2-Dimensional averaging. Takes average value of
     all point around given point with given radius.
 
     Args:
@@ -148,7 +152,8 @@ def process_func_2d(args):
 def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
                                       radius: int, max_processes: int = 4,
                                       visuals: bool = False) -> np.ndarray:
-    """Basic method of 2-Dimensional averaging using parallel computations.
+    """
+    Basic method of 2-Dimensional averaging using parallel computations.
     Takes average value of all point around given point with given radius.
 
     Args:
@@ -179,6 +184,207 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
             k += 1
 
     return output_field
+
+
+def gauss_wnd_init(sigma: int) -> np.ndarray:
+
+    wnd_sz = int(np.ceil(3 * sigma))
+    window = np.zeros((2 * wnd_sz + 1))
+    s2 = 2 * sigma * sigma
+    const = np.sqrt(2 * np.pi) * sigma
+
+    window[wnd_sz] = 1
+    for i in range(1, wnd_sz + 1):
+        window[wnd_sz - i] = window[wnd_sz + i] = np.exp(- i * i / s2) / const
+
+    return window
+
+
+def ver_aver_3(mtx: np.ndarray, window: np.ndarray, wnd_sz: int, MAX_VER: int, x: int, z: int):
+
+    t_mtx = np.zeros(MAX_VER)
+    for i in range(MAX_VER):
+        t_mtx[i] = mtx[z][i][x]
+
+    for y in range(MAX_VER):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + y
+
+            if (t_ind >= 0 and t_ind < MAX_VER):
+                t_elem += mtx[z][t_ind][x] * window[w_ind]
+            sum += window[w_ind]
+            # if u ll put this ```sum +=window[w_ind]``` in under if (in all gauss funcs)
+            # then gauss will become limited by borders of initial array
+        if (sum != 0):
+            t_mtx[y] = t_elem / sum
+
+    for i in range(MAX_VER):
+        mtx[z][i][x] = t_mtx[i]
+
+
+def hor_aver_3(mtx: np.ndarray, window: np.ndarray, wnd_sz: int, MAX_HOR: int, y: int, z: int):
+
+    t_mtx = np.zeros(MAX_HOR)
+    for i in range(MAX_HOR):
+        t_mtx[i] = mtx[z][y][i]
+
+    for x in range(MAX_HOR):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + x
+
+            if (t_ind >= 0 and t_ind < MAX_HOR):
+                t_elem += mtx[z][y][t_ind] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[x] = t_elem / sum
+
+    for i in range(MAX_HOR):
+        mtx[z][y][i] = t_mtx[i]
+
+
+def dep_aver_3(mtx: np.ndarray, window: np.ndarray, wnd_sz: int, MAX_DEP: int, x: int, y: int):
+
+    t_mtx = np.zeros(MAX_DEP)
+    for i in range(MAX_DEP):
+        t_mtx[i] = mtx[i][y][x]
+
+    for z in range(MAX_DEP):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + z
+
+            if (t_ind >= 0 and t_ind < MAX_DEP):
+                t_elem += mtx[t_ind][y][x] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[z] = t_elem / sum
+
+    for i in range(MAX_DEP):
+        mtx[i][y][x] = t_mtx[i]
+
+
+def ver_aver_2(mtx: np.ndarray, window: np.ndarray, wnd_sz: int, MAX_VER: int, x: int):
+
+    t_mtx = np.zeros(MAX_VER)
+    for i in range(MAX_VER):
+        t_mtx[i] = mtx[i][x]
+
+    for y in range(MAX_VER):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + y
+
+            if (t_ind >= 0 and t_ind < MAX_VER):
+                t_elem += mtx[t_ind][x] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[y] = t_elem / sum
+
+    for i in range(MAX_VER):
+        mtx[i][x] = t_mtx[i]
+
+
+def hor_aver_2(mtx: np.ndarray, window: np.ndarray, wnd_sz: int, MAX_HOR: int, y: int):
+
+    t_mtx = np.zeros(MAX_HOR)
+    for i in range(MAX_HOR):
+        t_mtx[i] = mtx[y][i]
+
+    for x in range(MAX_HOR):
+        sum = 0
+        t_elem = 0
+
+        for w_ind in range(0, wnd_sz * 2 + 1):
+            t_ind = w_ind - wnd_sz + x
+
+            if (t_ind >= 0 and t_ind < MAX_HOR):
+                t_elem += mtx[y][t_ind] * window[w_ind]
+            sum += window[w_ind]
+
+        if (sum != 0):
+            t_mtx[x] = t_elem / sum
+
+    for i in range(MAX_HOR):
+        mtx[y][i] = t_mtx[i]
+
+
+def gauss_3d(in_field: np.ndarray, sigma: int) -> np.ndarray:
+    """
+    Gauss method of 3-Dimensional averaging going line-by-line
+    and doesnt take care of the border.
+    Uses 'window' and 'sigma' to count the degree of averaging.
+
+    Args:
+        inputed_field (NDArray): field to get averaged
+        sigma (int): defines the degree of averaging and size of window kernel,
+                     which we impose on field by support functions like hor_aver, ver_aver and etc
+
+    Returns:
+        NDArray: new averaged 3d field
+    """
+    MAX_DEP, MAX_VER, MAX_HOR = in_field.shape
+
+    mtx = in_field.copy()
+
+    window = gauss_wnd_init(sigma)
+    wnd_sz = int(np.ceil(3 * sigma))
+
+    for z in range(MAX_DEP):
+
+        for y in range(MAX_VER):
+            hor_aver_3(mtx, window, wnd_sz, MAX_HOR, y, z)
+
+        for x in range(MAX_HOR):
+            ver_aver_3(mtx, window, wnd_sz, MAX_VER, x, z)
+
+    for x in range(MAX_HOR):
+        for y in range(MAX_VER):
+            dep_aver_3(mtx, window, wnd_sz, MAX_DEP, x, y)
+
+    return mtx
+
+
+def gauss_2d(in_field, sigma) -> np.ndarray:
+    """
+    Gauss method of 2-Dimensional averaging going line-by-line
+    and doesnt take care of the border.
+    Uses 'window' and 'sigma' to count the degree of averaging.
+
+    Args:
+        inputed_field (NDArray): field to get averaged
+        sigma (int): defines the degree of averaging and size of window kernel,
+                     which we impose on field
+
+    Returns:
+        NDArray: new averaged 2d field
+    """
+    MAX_VER, MAX_HOR = in_field.shape
+
+    mtx = in_field.copy()
+
+    window = gauss_wnd_init(sigma)
+    wnd_sz = int(np.ceil(3 * sigma))
+
+    for y in range(MAX_VER):
+        hor_aver_2(mtx, window, wnd_sz, MAX_HOR, y)
+
+    for x in range(MAX_HOR):
+        ver_aver_2(mtx, window, wnd_sz, MAX_VER, x)
+
+    return mtx
 
 
 def test():
