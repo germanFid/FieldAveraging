@@ -1,9 +1,13 @@
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from matplotlib.animation import FuncAnimation
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
-
-def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None,
-                        show_colorbar=False, figsize=(6, 6), font_size=12, nrows=1, normalize=None):
+def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
+                        show_colorbar=False, figsize=(6, 6), font_size=12, 
+                        nrows=1, normalize=None, cmap='Spectral'):
     num_figures = len(figures)
     ncols = (num_figures + nrows - 1) // nrows
 
@@ -17,10 +21,10 @@ def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None,
         if normalize is not None:
             vmin = normalize[0]
             vmax = normalize[1]
-            im = ax.imshow(figures[i], cmap='Spectral', interpolation='none',
+            im = ax.imshow(figures[i], cmap=cmap, interpolation='none',
                            vmin=vmin, vmax=vmax)
         else:
-            im = ax.imshow(figures[i], cmap='Spectral', interpolation='none')
+            im = ax.imshow(figures[i], cmap=cmap, interpolation='none')
             ax.set_axis_off()
         if titles is not None:
             ax.set_title(titles[i])
@@ -31,6 +35,55 @@ def plot_figures_in_row(figures, titles=None, xlabels=None, ylabels=None,
         if show_colorbar:
             fig.colorbar(im, ax=ax)
 
+    plt.subplots_adjust(wspace=0.05, hspace=0.05)
+    return fig
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from scipy import interpolate
+
+
+def plot_3d_in_row(figures, titles=None, xlabels=None, ylabels=None, zlabels=None,
+                   show_colorbar=False, figsize=(6, 6), font_size=12, nrows=1, 
+                   normalize=None, exclude=None, cmap='Spectral', edgecolor = None):
+    
+    num_figures = len(figures)
+    ncols = (num_figures + nrows - 1) // nrows
+
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, subplot_kw={'projection': '3d'})
+
+    plt.rcParams.update({'font.size': font_size})
+
+    for i, ax in enumerate(np.ravel(axs)):
+        if i >= num_figures:
+            break
+        data = figures[i]
+        if exclude is not None:
+            data = np.where(data < exclude, np.nan, data)
+        if normalize is not None:
+            norm = plt.Normalize(vmin=normalize[0], vmax=normalize[1])
+            colors = cm.get_cmap(cmap)(norm(data.flatten()))
+        else:
+            norm = plt.Normalize(vmin=np.min(data), vmax=np.max(data))
+            colors = cm.get_cmap(cmap)(data.flatten())
+        if len(data.shape) == 3:
+            filled = data > 0  # Create a boolean array indicating which voxels are filled
+            surf = ax.voxels(filled, facecolors=colors.reshape(data.shape[0], data.shape[1], data.shape[2], -1), edgecolor=edgecolor)
+        else:
+            raise ValueError("Data must be 3D array")
+        if titles is not None:
+            ax.set_title(titles[i])
+        if xlabels is not None:
+            ax.set_xlabel(xlabels[i])
+        if ylabels is not None:
+            ax.set_ylabel(ylabels[i])
+        if zlabels is not None:
+            ax.set_zlabel(zlabels[i])
+        if show_colorbar:
+            fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cm.get_cmap(cmap)), ax=ax)
+    
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return fig
 
