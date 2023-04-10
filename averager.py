@@ -197,6 +197,7 @@ def init_gauss_window(sigma: int) -> np.ndarray:
 
     window_size = np.ceil(3 * sigma)
     window = np.zeros(2 * window_size + 1)
+
     s2 = 2 * sigma * sigma
     const = np.sqrt(2 * np.pi) * sigma
 
@@ -353,7 +354,7 @@ def average_3d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     copied_field = in_field.copy()
 
     window = init_gauss_window(sigma)
-    window_size = np.ceil(3 * sigma)
+    window_size = int(np.ceil(3 * sigma))
 
     for z in range(depth):
 
