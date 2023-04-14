@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import io
 
 
@@ -84,7 +85,7 @@ def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
                 fn.write("\n")
 
 
-def advance_to_column(data: StreamData, column_name: str):
+def advance_to_column(data: StreamData, column_name: str) -> np.array:
     """Outputs 2D or 3D list of column setting"""
 
     column = data.dataset[column_name]
@@ -116,8 +117,10 @@ def advance_to_column(data: StreamData, column_name: str):
         y_dim = data.j
         z_dim = data.k
 
-        data_3d = [[data_list[z * z_dim * y_dim + y * y_dim + x] for x in range(x_dim)]
-                   for y in range(y_dim) for z in range(z_dim)]
+        # data_3d = [[data_list[z * num_rows * y_dim + y * y_dim + x] for x in range(x_dim)]
+        #            for y in range(y_dim) for z in range(z_dim)]
+
+        data_3d = np.reshape(np.asarray(data_list), (x_dim, y_dim, z_dim))
 
         # Return the result as 3D list
         return data_3d
@@ -133,7 +136,21 @@ def update_dataset_column(data: StreamData, column: str, list):
     """
 
     n = 0
-    for i in range(data.i):
-        for j in range(data.j):
-            data.dataset.iloc[n][column] = list[i][j]
-            n += 1
+
+    if data.k == 0:
+        for i in range(data.i):
+            for j in range(data.j):
+                data.dataset.iloc[n][column] = list[i][j]
+                n += 1
+
+    else:
+        for i in range(data.i):
+            for j in range(data.j):
+                for k in range(data.k):
+                    data.dataset.iloc[n][column] = list[i][j][k]
+                    n += 1
+
+
+def save_temp_streamdata(data: StreamData, filename):
+    data.dataset.to_csv(filename + '.out.csv', index=False,
+                        chunksize=100000, encoding='utf-8')
