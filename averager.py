@@ -91,8 +91,8 @@ def basic_3d_averaging_parralel(inputed_field: np.ndarray,
     chunksize = int(max([1, (n * m * p) / (4 * max_processes)]))
 
     if visuals:
-        results = list(tqdm(pool.imap(process_func3dAv, args_list, chunksize=chunksize,
-                                      total=(n * m * p)), miniters=1000))
+        results = list(tqdm(pool.imap(process_func3dAv, args_list, chunksize=chunksize),
+                                      total=(n * m * p), miniters=1000))
 
     else:
         results = list(pool.imap(process_func3dAv, args_list, chunksize=chunksize))
