@@ -71,6 +71,43 @@ def basic_3d_array_averaging(inputed_field: list, radius: int) -> np.ndarray:
     return output_field
 
 
+def process_func3dAv(args):
+    i, j, k, inputed_field, radius, average_this_3d_point_func = args
+    return average_this_3d_point_func(i, j, k, inputed_field, radius)
+
+
+def basic_3d_averaging_parralel(inputed_field: np.ndarray,
+                                radius: int, max_processes: int = 4,
+                                visuals: bool = False) -> np.ndarray:
+
+    n, m, p = inputed_field.shape
+
+    output_field = np.zeros((n, m, p))
+
+    pool = multiprocessing.Pool(processes=max_processes)
+    args_list = [(i, j, k, inputed_field, radius, average_this_3d_point)
+                 for i in range(n) for j in range(m) for k in range(p)]
+
+    chunksize = int(max([1, (n * m * p) / (4 * max_processes)]))
+
+    if visuals:
+        results = list(tqdm(pool.imap(process_func3dAv, args_list, chunksize=chunksize,
+                                      total=(n * m * p)), miniters=1000))
+
+    else:
+        results = list(pool.imap(process_func3dAv, args_list, chunksize=chunksize))
+
+    pool.close()
+
+    z = 0
+    for i in range(0, n):
+        for j in range(0, m):
+            for k in range(0, p):
+                output_field[i][j][k] = results[z]
+                z += 1
+
+    return output_field
+
 # def average_this_2d_point(i: int, j: int, in_field: list, radius: int) -> float:
 #     """Basic method of 2-Dimensional averaging. Takes average value of
 #     all point around given point with given radius.
@@ -147,7 +184,7 @@ def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int,
     return output_field
 
 
-def process_func(args):
+def process_func_2dAv(args):
     i, j, inputed_field, radius, average_this_2d_point_func = args
     return average_this_2d_point_func(i, j, inputed_field, radius)
 
@@ -179,11 +216,11 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     chunksize = int(max([1, (n * m) / (4 * max_processes)]))
 
     if visuals:
-        results = list(tqdm(pool.imap(process_func, args_list, chunksize=chunksize),
+        results = list(tqdm(pool.imap(process_func_2dAv, args_list, chunksize=chunksize),
                             total=(n * m), miniters=1000))
 
     else:
-        results = list(pool.imap(process_func, args_list, chunksize=chunksize))
+        results = list(pool.imap(process_func_2dAv, args_list, chunksize=chunksize))
 
     pool.close()
 
