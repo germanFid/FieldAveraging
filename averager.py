@@ -1,6 +1,7 @@
 import multiprocessing
 import numpy as np
 from tqdm import tqdm
+from typing import Tuple
 
 
 def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: int) -> float:
@@ -193,9 +194,18 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     return output_field
 
 
-def init_gauss_window(sigma: int) -> np.ndarray:
+def init_gauss_window(sigma: int) -> Tuple[np.ndarray, float]:
+    """
+    initing gauss window
 
-    window_size = np.ceil(3 * sigma)
+    Args:
+        sigma (int): sigma sets the radius of window and
+        influence on blur coef in gauss formula
+
+    Returns:
+        Tuple[np.ndarray, float]: returning window and sum of elems in window
+    """
+    window_size = int(np.ceil(3 * sigma))
     window = np.zeros(2 * window_size + 1)
 
     s2 = 2 * sigma * sigma
@@ -205,11 +215,12 @@ def init_gauss_window(sigma: int) -> np.ndarray:
     for i in range(1, window_size + 1):
         window[window_size - i] = window[window_size +
                                          i] = np.exp(- i * i / s2) / const
+    window_sum = np.sum(window)
 
-    return window
+    return window, window_sum
 
 
-def average_vertical_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
+def average_vertical_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                               window_size: int, height: int, x: int, z: int):
 
     temp_vertical = np.zeros(height)
@@ -217,25 +228,30 @@ def average_vertical_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
         temp_vertical[i] = copied_field[z][i][x]
 
     for y in range(height):
-        sum = 0
         temp_elem = 0
 
-        for window_index in range(0, window_size * 2 + 1):
-            temp_index = window_index - window_size + y
+        temp_index = y - window_size
+        start = 0
+        if temp_index < 0:
+            start = window_size - y
+            temp_index = 0
 
-            if (temp_index >= 0 and temp_index < height):
-                temp_elem += copied_field[z][temp_index][x] * window[window_index]
-            sum += window[window_index]
+        for window_index in range(start, window_size * 2 + 1):
+
+            if (temp_index < height):
+                temp_elem += copied_field[z][temp_index][x] * \
+                    window[window_index]
+            temp_index += 1
+            # sum += window[window_index]
             # if u ll put this ```sum +=window[window_index]``` in under if (in all gauss funcs)
             # then gauss will become limited by borders of initial array
-        if (sum != 0):
-            temp_vertical[y] = temp_elem / sum
+        temp_vertical[y] = temp_elem / window_sum
 
     for i in range(height):
         copied_field[z][i][x] = temp_vertical[i]
 
 
-def average_horizontal_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
+def average_horizontal_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                                 window_size: int, width: int, y: int, z: int):
 
     temp_horizontal = np.zeros(width)
@@ -243,24 +259,28 @@ def average_horizontal_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
         temp_horizontal[i] = copied_field[z][y][i]
 
     for x in range(width):
-        sum = 0
         temp_elem = 0
 
-        for window_index in range(0, window_size * 2 + 1):
-            temp_index = window_index - window_size + x
+        temp_index = x - window_size
+        start = 0
+        if temp_index < 0:
+            start = window_size - x
+            temp_index = 0
 
-            if (temp_index >= 0 and temp_index < width):
-                temp_elem += copied_field[z][y][temp_index] * window[window_index]
-            sum += window[window_index]
+        for window_index in range(start, window_size * 2 + 1):
 
-        if (sum != 0):
-            temp_horizontal[x] = temp_elem / sum
+            if (temp_index < width):
+                temp_elem += copied_field[z][y][temp_index] * \
+                    window[window_index]
+            temp_index += 1
+
+        temp_horizontal[x] = temp_elem / window_sum
 
     for i in range(width):
         copied_field[z][y][i] = temp_horizontal[i]
 
 
-def average_depth_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
+def average_depth_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                            window_size: int, depth: int, x: int, y: int):
 
     temp_depth = np.zeros(depth)
@@ -268,24 +288,28 @@ def average_depth_gauss_3d(copied_field: np.ndarray, window: np.ndarray,
         temp_depth[i] = copied_field[i][y][x]
 
     for z in range(depth):
-        sum = 0
         temp_elem = 0
 
-        for window_index in range(0, window_size * 2 + 1):
-            temp_index = window_index - window_size + z
+        temp_index = z - window_size
+        start = 0
+        if temp_index < 0:
+            start = window_size - z
+            temp_index = 0
 
-            if (temp_index >= 0 and temp_index < depth):
-                temp_elem += copied_field[temp_index][y][x] * window[window_index]
-            sum += window[window_index]
+        for window_index in range(start, window_size * 2 + 1):
 
-        if (sum != 0):
-            temp_depth[z] = temp_elem / sum
+            if (temp_index < depth):
+                temp_elem += copied_field[temp_index][y][x] * \
+                    window[window_index]
+            temp_index += 1
+
+        temp_depth[z] = temp_elem / window_sum
 
     for i in range(depth):
         copied_field[i][y][x] = temp_depth[i]
 
 
-def average_vertical_gauss_2d(copied_field: np.ndarray, window: np.ndarray,
+def average_vertical_gauss_2d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                               window_size: int, height: int, x: int):
 
     temp_vertical = np.zeros(height)
@@ -293,24 +317,27 @@ def average_vertical_gauss_2d(copied_field: np.ndarray, window: np.ndarray,
         temp_vertical[i] = copied_field[i][x]
 
     for y in range(height):
-        sum = 0
         temp_elem = 0
 
-        for window_index in range(0, window_size * 2 + 1):
-            temp_index = window_index - window_size + y
+        temp_index = y - window_size
+        start = 0
+        if temp_index < 0:
+            start = window_size - y
+            temp_index = 0
 
-            if (temp_index >= 0 and temp_index < height):
+        for window_index in range(start, window_size * 2 + 1):
+
+            if (temp_index < height):
                 temp_elem += copied_field[temp_index][x] * window[window_index]
-            sum += window[window_index]
+            temp_index += 1
 
-        if (sum != 0):
-            temp_vertical[y] = temp_elem / sum
+        temp_vertical[y] = temp_elem / window_sum
 
     for i in range(height):
         copied_field[i][x] = temp_vertical[i]
 
 
-def average_horizontal_gauss_2d(copied_field: np.ndarray, window: np.ndarray,
+def average_horizontal_gauss_2d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                                 window_size: int, width: int, y: int):
 
     temp_horizontal = np.zeros(width)
@@ -318,18 +345,21 @@ def average_horizontal_gauss_2d(copied_field: np.ndarray, window: np.ndarray,
         temp_horizontal[i] = copied_field[y][i]
 
     for x in range(width):
-        sum = 0
         temp_elem = 0
 
-        for window_index in range(0, window_size * 2 + 1):
-            temp_index = window_index - window_size + x
+        temp_index = x - window_size
+        start = 0
+        if temp_index < 0:
+            start = window_size - x
+            temp_index = 0
 
-            if (temp_index >= 0 and temp_index < width):
+        for window_index in range(start, window_size * 2 + 1):
+
+            if (temp_index < width):
                 temp_elem += copied_field[y][temp_index] * window[window_index]
-            sum += window[window_index]
+            temp_index += 1
 
-        if (sum != 0):
-            temp_horizontal[x] = temp_elem / sum
+        temp_horizontal[x] = temp_elem / window_sum
 
     for i in range(width):
         copied_field[y][i] = temp_horizontal[i]
@@ -353,22 +383,22 @@ def average_3d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
 
     copied_field = in_field.copy()
 
-    window = init_gauss_window(sigma)
+    window, window_sum = init_gauss_window(sigma)
     window_size = int(np.ceil(3 * sigma))
 
     for z in range(depth):
 
         for y in range(height):
-            average_horizontal_gauss_3d(
-                copied_field, window, window_size, width, y, z)
+            average_horizontal_gauss_3d(copied_field, window, window_sum,
+                                        window_size, width, y, z)
 
         for x in range(width):
-            average_vertical_gauss_3d(
-                copied_field, window, window_size, height, x, z)
+            average_vertical_gauss_3d(copied_field, window, window_sum,
+                                      window_size, height, x, z)
 
     for x in range(width):
         for y in range(height):
-            average_depth_gauss_3d(copied_field, window,
+            average_depth_gauss_3d(copied_field, window, window_sum,
                                    window_size, depth, x, y)
 
     return copied_field
@@ -392,15 +422,16 @@ def average_2d_by_gauss(in_field, sigma) -> np.ndarray:
 
     copied_field = in_field.copy()
 
-    window = init_gauss_window(sigma)
-    window_size = np.ceil(3 * sigma)
+    window, window_sum = init_gauss_window(sigma)
+    window_size = int(np.ceil(3 * sigma))
 
     for y in range(height):
         average_horizontal_gauss_2d(
-            copied_field, window, window_size, width, y)
+            copied_field, window, window_sum, window_size, width, y)
 
     for x in range(width):
-        average_vertical_gauss_2d(copied_field, window, window_size, height, x)
+        average_vertical_gauss_2d(
+            copied_field, window, window_sum, window_size, height, x)
 
     return copied_field
 
