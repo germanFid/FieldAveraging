@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import io
 
 
 class StreamData:
@@ -10,7 +9,7 @@ class StreamData:
 
     def __init__(self, csvstr: str, i: int, j: int, k: int = 0):
         # TODO: Check for correct data it should be csv-string
-        self.dataset = pd.read_csv(io.StringIO(csvstr))
+        self.dataset = pd.read_csv(csvstr)
         self.i = i
         self.j = j
         self.k = k
