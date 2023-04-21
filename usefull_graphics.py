@@ -47,7 +47,7 @@ from scipy import interpolate
 
 def plot_3d_in_row(figures, titles=None, xlabels=None, ylabels=None, zlabels=None,
                    show_colorbar=False, figsize=(6, 6), font_size=12, nrows=1, 
-                   normalize=None, exclude=None, cmap='Spectral', edgecolor = None):
+                   normalize=None, exclude=None, cmap='Spectral', edgecolor=None):
     
     num_figures = len(figures)
     ncols = (num_figures + nrows - 1) // nrows
@@ -55,6 +55,12 @@ def plot_3d_in_row(figures, titles=None, xlabels=None, ylabels=None, zlabels=Non
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, subplot_kw={'projection': '3d'})
 
     plt.rcParams.update({'font.size': font_size})
+    
+    # Ensure that a valid colormap is passed
+    try:
+        cmap_obj = cm.get_cmap(cmap)
+    except ValueError:
+        raise ValueError("Invalid colormap: {}".format(cmap))
 
     for i, ax in enumerate(np.ravel(axs)):
         if i >= num_figures:
@@ -64,10 +70,10 @@ def plot_3d_in_row(figures, titles=None, xlabels=None, ylabels=None, zlabels=Non
             data = np.where(data < exclude, np.nan, data)
         if normalize is not None:
             norm = plt.Normalize(vmin=normalize[0], vmax=normalize[1])
-            colors = cm.get_cmap(cmap)(norm(data.flatten()))
+            colors = cmap_obj(norm(data.flatten()))
         else:
             norm = plt.Normalize(vmin=np.min(data), vmax=np.max(data))
-            colors = cm.get_cmap(cmap)(data.flatten())
+            colors = cmap_obj(data.flatten())
         if len(data.shape) == 3:
             filled = data > 0  # Create a boolean array indicating which voxels are filled
             surf = ax.voxels(filled, facecolors=colors.reshape(data.shape[0], data.shape[1], data.shape[2], -1), edgecolor=edgecolor)
@@ -82,7 +88,7 @@ def plot_3d_in_row(figures, titles=None, xlabels=None, ylabels=None, zlabels=Non
         if zlabels is not None:
             ax.set_zlabel(zlabels[i])
         if show_colorbar:
-            fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cm.get_cmap(cmap)), ax=ax)
+            fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap_obj), ax=ax)
     
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return fig
