@@ -83,49 +83,6 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
     return fig
 
 
-def plot_3d_voxels_gpu(figure, title=None, xlabel=None, ylabel=None, zlabel=None, 
-                       show_colorbar=False, font_size=12, normalize=None, exclude=None, cmap='Spectral'):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    x_size, y_size, z_size = figure.shape
-    
-    plt.rcParams.update({'font.size': font_size})
-    # Ensure that a valid colormap is passed
-    try:
-        cmap_obj = plt.get_cmap(cmap)
-    except ValueError:
-        raise ValueError("Invalid colormap: {}".format(cmap))
-    
-    data = cp.asarray(figure) # convert input array to CuPy array
-    if exclude is not None:
-        data = cp.where(cp.absolute(data) < exclude, cp.nan, data)
-    if normalize is not None:
-        norm = Normalize(vmin=normalize[0], vmax=normalize[1])
-    else:
-        norm = Normalize(vmin=cp.nanmin(data), vmax=cp.nanmax(data))
-    if len(data.shape) == 3:
-        # Create a voxel grid and set the facecolors and edgecolors based on the normalized data
-        ax.voxels(data.get(), facecolors=cmap_obj(norm(data.get())), edgecolor='k') # convert CuPy array back to NumPy for plotting
-    else:
-        raise ValueError("Data must be 3D array")
-    if title is not None:
-        ax.set_title(title)
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-    if zlabel is not None:
-        ax.set_zlabel(zlabel)
-    if show_colorbar:
-        # Create a colorbar for the normalized data
-        mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap_obj)
-        mappable.set_array(data.get()) # convert CuPy array back to NumPy for colorbar
-        plt.colorbar(mappable)
-    
-    plt.subplots_adjust(wspace=0.05, hspace=0.05)
-    return fig
-
-
 def create_gif(data, filename, name='', duration=100, vmin=None, vmax=None, figsize=(8, 10)):
     fig, ax = plt.subplots(figsize=figsize)
     im = ax.imshow(data[0], cmap='Spectral', interpolation='none', vmin=vmin, vmax=vmax)
