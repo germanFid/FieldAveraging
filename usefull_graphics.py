@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.style as mplstyle
 import numpy as np
-from matplotlib.colors import Normalize, ListedColormap
+from matplotlib.colors import Normalize
 
 def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
                         show_colorbar=False, figsize=(6, 6), font_size=12, 
@@ -35,7 +35,7 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
         if ylabels is not None:
             ax.set_ylabel(ylabels[i])
     if show_colorbar:
-        fig.colorbar(im, ax=axs, shrink=0.8)
+        fig.colorbar(im, ax=axs, shrink=1)
         
     return fig
 
