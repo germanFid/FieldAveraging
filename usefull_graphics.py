@@ -34,10 +34,9 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
             ax.set_xlabel(xlabels[i])
         if ylabels is not None:
             ax.set_ylabel(ylabels[i])
-        if show_colorbar:
-            fig.colorbar(im, ax=ax, shrink=.65)
-
-    plt.subplots_adjust(wspace=0.05, hspace=0.05)
+    if show_colorbar:
+        fig.colorbar(im, ax=axs, shrink=0.8)
+        
     return fig
 
 
@@ -80,7 +79,6 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
         mappable.set_array(data)
         plt.colorbar(mappable)
     
-    plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return fig
 
 
