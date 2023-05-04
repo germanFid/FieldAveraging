@@ -96,8 +96,7 @@ def advance_to_column(data: StreamData, column_name: str) -> np.array:
     data_list = []
 
     # Iterate over the rows of the column and append each value to the list
-    for i in range(num_rows):
-        data_list.append(column[i])
+    data_list.append(column)
 
     # Check if z_dim is 0, return 2D list
     if data.k == 0:
@@ -105,7 +104,7 @@ def advance_to_column(data: StreamData, column_name: str) -> np.array:
         x_dim = data.i
         y_dim = data.j
 
-        data_2d = [data_list[i:i + x_dim] for i in range(0, y_dim * x_dim, x_dim)]
+        data_2d = np.reshape(np.asarray(data_list), (y_dim, x_dim))
 
         # Return the result as 2D list
         return data_2d
@@ -119,36 +118,25 @@ def advance_to_column(data: StreamData, column_name: str) -> np.array:
         # data_3d = [[data_list[z * num_rows * y_dim + y * y_dim + x] for x in range(x_dim)]
         #            for y in range(y_dim) for z in range(z_dim)]
 
-        data_3d = np.reshape(np.asarray(data_list), (x_dim, y_dim, z_dim))
+        data_3d = np.reshape(np.asarray(data_list), (z_dim, y_dim, x_dim))
 
         # Return the result as 3D list
         return data_3d
 
 
-def update_dataset_column(data: StreamData, column: str, list):
+def update_dataset_column(data: StreamData, column: str, updating_list: np.ndarray):
     """Updates dataset column of StreamData
 
     Args:
         data (StreamData): StreamData to update
         column (str): Name of column to update
-        list (_type_): 2d list with updated values
+        updating_list (np.ndarray): 2d or 3d list with updated values
     """
-
-    n = 0
-
-    if data.k == 0:
-        for i in range(data.i):
-            for j in range(data.j):
-                data.dataset.iloc[n][column] = list[i][j]
-                n += 1
-
+    z_dim, y_dim, x_dim = updating_list.shape
+    if z_dim == 0:
+        data.dataset[column] = list(np.reshape(updating_list, (y_dim * x_dim)))
     else:
-        for i in range(data.i):
-            for j in range(data.j):
-                for k in range(data.k):
-                    data.dataset.iloc[n][column] = list[i][j][k]
-                    n += 1
-
+        data.dataset[column] = list(np.reshape(updating_list, (z_dim * y_dim * x_dim)))
 
 def save_temp_streamdata(data: StreamData, filename):
     data.dataset.to_csv(filename + '.out.csv', index=False,
