@@ -12,7 +12,7 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
     num_figures = len(figures)
     ncols = (num_figures + nrows - 1) // nrows
     mplstyle.use('fast')
-    fig, axs = plt.plot(figsize=figsize)
+    fig, axs = plt.subplots(nrows, ncols)
 
     plt.rcParams.update({'font.size': font_size})
 
@@ -27,6 +27,7 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
         else:
             im = ax.imshow(figures[i], cmap=cmap, interpolation='none')
             ax.set_axis_off()
+        fig.set_size_inches(figsize)
         if titles is not None:
             ax.set_title(titles[i])
         if xlabels is not None:
@@ -34,7 +35,7 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
         if ylabels is not None:
             ax.set_ylabel(ylabels[i])
         if show_colorbar:
-            fig.colorbar(im, ax=ax)
+            fig.colorbar(im, ax=ax, shrink=.65)
 
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return fig
@@ -81,6 +82,40 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
     
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return fig
+
+
+def scatter_3d_array(data: np.ndarray, treeshold: float = None, normalize=None, 
+                     title: str = None, xlabel: str = None, ylabel: str = None, zlabel: str = None,
+                     colorbar: bool = False, cmap: str = "Spectral"):
+    n, m, k = data.shape
+    x, y, z = np.meshgrid(
+        np.linspace(0, 499, n), np.linspace(0, 999, m), np.linspace(0, 79, k)
+    )
+    if treeshold is not None:
+        data1 = np.where(data < treeshold, 0, data)
+        alphas = np.where(data < treeshold, 0, 1)
+    else:
+        alphas = 1
+    if normalize is not None:
+        norm = Normalize(vmin=normalize(0), vmax=normalize(1))
+    else:
+        norm = Normalize(vmin=np.min(data), vmax=np.max(data))
+    fig = plt.figure(figsize=(6,6))
+    ax = Axes3D(fig, auto_add_to_figure=False)
+    fig.add_axes(ax)
+    sc = ax.scatter(x, y, z, s=1, c=data1, marker='o', cmap=cmap, norm=norm, alpha = alphas)
+    if title is not None:
+        ax.set_title(title)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if zlabel is not None:
+        ax.set_zlabel(zlabel)
+    if colorbar:
+        fig.colorbar(sc, shrink=.65)
+    plt.show()
+    plt.savefig("scatter_hue", bbox_inches='tight')
 
 
 def create_gif(data, filename, name='', duration=100, vmin=None, vmax=None, figsize=(8, 10)):
