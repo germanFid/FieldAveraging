@@ -82,26 +82,27 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
     return fig
 
 
-def scatter_3d_array(data: np.ndarray, treeshold: float = None, normalize=None, 
+def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_down: float = None, normalize=None, 
                      title: str = None, xlabel: str = None, ylabel: str = None, zlabel: str = None,
                      colorbar: bool = False, cmap: str = "Spectral"):
     n, m, k = data.shape
     x, y, z = np.meshgrid(
-        np.linspace(0, 499, n), np.linspace(0, 999, m), np.linspace(0, 79, k)
+        np.linspace(0, n - 1, n), np.linspace(0, m - 1, m), np.linspace(0, k - 1, k)
     )
-    if treeshold is not None:
-        data1 = np.where(data < treeshold, 0, data)
-        alphas = np.where(data < treeshold, 0, 1)
+    if treeshold_up is not None:
+        alphas = np.where(data < treeshold_up, 0, 1)
+        if treeshold_down is not None:
+            alphas = np.where(data > treeshold_down, 0, alphas)
     else:
         alphas = 1
     if normalize is not None:
-        norm = Normalize(vmin=normalize(0), vmax=normalize(1))
+        norm = Normalize(vmin=normalize[0], vmax=normalize[1])
     else:
         norm = Normalize(vmin=np.min(data), vmax=np.max(data))
     fig = plt.figure(figsize=(6,6))
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
-    sc = ax.scatter(x, y, z, s=1, c=data1, marker='o', cmap=cmap, norm=norm, alpha = alphas)
+    sc = ax.scatter(x, y, z, s=100, c=data, marker='o', cmap=cmap, norm=norm, alpha = alphas)
     if title is not None:
         ax.set_title(title)
     if xlabel is not None:
