@@ -14,6 +14,10 @@ parser.add_argument('--lines', '-l', help='number of header lines', type=int)
 
 parser.add_argument('--verbose', '-v', help='verbose progress', action='store_true')
 
+parser.add_argument('--vv', help='verbose MORE progress', action='store_true')
+
+parser.add_argument('--leave', help='tkinter-output mode', action='store_true')
+
 parser.add_argument('--dimensions', '-d', help='dimensions seperated by comma', type=str)
 
 parser.add_argument('--job', '-j', help='job to do with opened Data',
@@ -31,17 +35,19 @@ args = parser.parse_args()
 
 DEFAULT_HEADER = 2
 DEFAULT_VERBOSE = False
+DEFAULT_MORE_VERBOSE = False
+DEFAULT_LEAVE = True
 DEFAULT_RADIUS = 1
 DEFAULT_ITERATIONS = 1
 DIM_X, DIM_Y, DIM_Z = 0, 0, 0
 
-LOG_FORMAT = '> %(asctime)s %(message)s\n'
+LOG_FORMAT = '\n> %(asctime)s %(message)s\n'
 logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger()
 
 
 def do_job(job: str, data: structures.StreamData, columns, iters, radius, verbose=False):
-    if iters == 1:
+    if iters != 1:
         vv = True
 
     else:
@@ -51,23 +57,31 @@ def do_job(job: str, data: structures.StreamData, columns, iters, radius, verbos
 
     if job == 'basic2d':
         for col in columns:
+            print("\n")
+            logger.warning("Performing Job on " + col)
             result = averager.basic_2d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose)
 
     elif job == 'basic2d_paral':
         for col in columns:
+            print("\n")
+            logger.warning("Performing Job on " + col)
             result = averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, vv, verbose)
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE)
 
     elif job == 'basic3d':
         for col in columns:
+            print("\n")
+            logger.warning("Performing Job on " + col)
             result = averager.basic_3d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose)
 
     elif job == 'basic3d_paral':
         for col in columns:
+            print("")
+            logger.warning("Performing Job on " + col)
             result = averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, vv, verbose)
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE)
 
     elif job == 'gauss':
         pass
@@ -78,6 +92,9 @@ if args.lines:
 
 if args.verbose:
     DEFAULT_VERBOSE = True
+
+if args.vv:
+    DEFAULT_MORE_VERBOSE = True
 
 if args.dimensions:
     dims = str(args.dimensions).split(',')
@@ -96,6 +113,9 @@ if args.radius:
 
 if args.iterations:
     DEFAULT_ITERATIONS = args.iterations
+
+if args.leave:
+    DEFAULT_LEAVE = False
 
 if __name__ == '__main__':
     with open('.logo.txt') as file:
