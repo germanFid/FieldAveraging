@@ -14,11 +14,13 @@ parser.add_argument('--lines', '-l', help='number of header lines', type=int)
 
 parser.add_argument('--verbose', '-v', help='verbose progress', action='store_true')
 
-parser.add_argument('--dimensions', '-d', help='dimensions divided by comma', type=str)
+parser.add_argument('--dimensions', '-d', help='dimensions seperated by comma', type=str)
 
 parser.add_argument('--job', '-j', help='job to do with opened Data',
                     choices=['basic2d', 'basic2d_paral', 'basic3d', 'basic3d_paral', 'gauss'],
                     type=str)
+
+parser.add_argument('--columns', '-c', help='columns to do jobs seperated by comma', type=str)
 
 parser.add_argument('--radius', '-r', help='averaging radius', type=int)
 parser.add_argument('--iterations', '-i', help='number of iterations', type=int)
@@ -38,7 +40,7 @@ logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger()
 
 
-def do_job(job: str, data: structures.StreamData, columns, iters, radius, override=False, verbose=False):
+def do_job(job: str, data: structures.StreamData, columns, iters, radius, verbose=False):
     if iters == 1:
         vv = True
 
@@ -49,22 +51,22 @@ def do_job(job: str, data: structures.StreamData, columns, iters, radius, overri
 
     if job == 'basic2d':
         for col in columns:
-            result = averager.gauss_2d_averaging_iterations(
+            result = averager.basic_2d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose)
 
     elif job == 'basic2d_paral':
         for col in columns:
-            result = averager.gauss_2d_averaging_iterations(
+            result = averager.basic_2d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, vv, verbose)
 
     elif job == 'basic3d':
         for col in columns:
-            result = averager.gauss_2d_averaging_iterations(
+            result = averager.basic_3d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose)
 
     elif job == 'basic3d_paral':
         for col in columns:
-            result = averager.gauss_2d_averaging_iterations(
+            result = averager.basic_2d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, vv, verbose)
 
     elif job == 'gauss':
@@ -84,11 +86,10 @@ if args.dimensions:
         exit()
 
     else:
-        DIM_X, DIM_Y = dims[0], dims[1]
+        DIM_X, DIM_Y = int(dims[0]), int(dims[1])
 
         if len(dims) == 3:
-            DIM_Z = dims[2]
-        
+            DIM_Z = int(dims[2])
 
 if args.radius:
     DEFAULT_RADIUS = args.radius
@@ -107,3 +108,13 @@ if __name__ == '__main__':
 
     if DEFAULT_VERBOSE:
         print(data.dataset)
+
+    if args.job:
+        columns = str(args.columns).split(",")
+
+        for col in columns:  # first check if column exists
+            if col not in data.dataset:
+                logger.error("Wrong Column: " + col)
+
+        logger.warning("Started Job: " + args.job)
+        do_job(args.job, data, columns, DEFAULT_ITERATIONS, DEFAULT_RADIUS, DEFAULT_VERBOSE)
