@@ -6,9 +6,36 @@ import matplotlib.style as mplstyle
 import numpy as np
 from matplotlib.colors import Normalize
 
+
+def plot_2d(figure, title=None, xlabel=None, ylabel=None,
+            show_colorbar=False, figsize=(6, 6), font_size=12,
+            normalize=None, extent=None, cmap='Spectral'):
+    mplstyle.use('fast')
+    fig, ax = plt.subplots()
+
+    plt.rcParams.update({'font.size': font_size})
+    if normalize is not None:
+        vmin = normalize[0]
+        vmax = normalize[1]
+        im = ax.imshow(figure, cmap=cmap, interpolation='none',
+                       vmin=vmin, vmax=vmax, extent=extent)
+    else:
+        im = ax.imshow(figure, cmap=cmap, interpolation='none', extent=extent)
+    fig.set_size_inches(figsize)
+    if title is not None:
+        ax.set_title(title)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if show_colorbar:
+        fig.colorbar(im, ax=ax, shrink=1)
+    return fig
+
+
 def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
-                        show_colorbar=False, figsize=(6, 6), font_size=12, 
-                        nrows=1, normalize=None, cmap='Spectral'):
+                   show_colorbar=False, figsize=(6, 6), font_size=12,
+                   nrows=1, normalize=None, extent=None, cmap='Spectral'):
     num_figures = len(figures)
     ncols = (num_figures + nrows - 1) // nrows
     mplstyle.use('fast')
@@ -23,10 +50,9 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
             vmin = normalize[0]
             vmax = normalize[1]
             im = ax.imshow(figures[i], cmap=cmap, interpolation='none',
-                           vmin=vmin, vmax=vmax)
+                           vmin=vmin, vmax=vmax, extent=extent)
         else:
-            im = ax.imshow(figures[i], cmap=cmap, interpolation='none')
-            ax.set_axis_off()
+            im = ax.imshow(figures[i], cmap=cmap, interpolation='none', extent=extent)
         fig.set_size_inches(figsize)
         if titles is not None:
             ax.set_title(titles[i])
@@ -36,23 +62,21 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
             ax.set_ylabel(ylabels[i])
     if show_colorbar:
         fig.colorbar(im, ax=axs, shrink=1)
-        
     return fig
 
 
-def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None, 
-                   show_colorbar=False, font_size=12, normalize=None, exclude=None, cmap='Spectral'):
+def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
+                   show_colorbar=False, font_size=12, normalize=None,
+                   exclude=None, cmap='Spectral'):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x_size, y_size, z_size = figure.shape
-    
     plt.rcParams.update({'font.size': font_size})
     # Ensure that a valid colormap is passed
     try:
         cmap_obj = plt.get_cmap(cmap)
     except ValueError:
         raise ValueError("Invalid colormap: {}".format(cmap))
-    
     data = figure
     if exclude is not None:
         data = np.where(abs(data) < exclude, np.nan, data)
@@ -78,7 +102,6 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
         mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap_obj)
         mappable.set_array(data)
         plt.colorbar(mappable)
-    
     return fig
 
 
