@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from matplotlib import cm
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.style as mplstyle
@@ -105,9 +104,9 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
     return fig
 
 
-def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_down: float = None, normalize=None, 
-                     title: str = None, xlabel: str = None, ylabel: str = None, zlabel: str = None,
-                     colorbar: bool = False, cmap: str = "Spectral"):
+def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_down: float = None,
+                     normalize=None, title: str = None, xlabel: str = None, ylabel: str = None,
+                     zlabel: str = None, colorbar: bool = False, cmap: str = "Spectral"):
     n, m, k = data.shape
     x, y, z = np.meshgrid(
         np.linspace(0, n - 1, n), np.linspace(0, m - 1, m), np.linspace(0, k - 1, k)
@@ -122,10 +121,10 @@ def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_dow
         norm = Normalize(vmin=normalize[0], vmax=normalize[1])
     else:
         norm = Normalize(vmin=np.min(data), vmax=np.max(data))
-    fig = plt.figure(figsize=(6,6))
+    fig = plt.figure(figsize=(6, 6))
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
-    sc = ax.scatter(x, y, z, s=100, c=data, marker='o', cmap=cmap, norm=norm, alpha = alphas)
+    sc = ax.scatter(x, y, z, s=100, c=data, marker='o', cmap=cmap, norm=norm, alpha=alphas)
     if title is not None:
         ax.set_title(title)
     if xlabel is not None:
