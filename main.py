@@ -142,4 +142,13 @@ if __name__ == '__main__':
         do_job(args.job, data, columns, DEFAULT_ITERATIONS, DEFAULT_RADIUS, DEFAULT_VERBOSE)
 
         logger.warning('All jobs Done!')
+
+        if args.outfile:
+            try:
+                structures.save_temp_streamdata(data, args.outfile)
+                logger.warning("Saving to " + args.outfile + ".out.csv done!")
+
+            except:
+                logger.error("Error saving with your filename! Saving as out.csv")
+                structures.save_temp_streamdata(data, "out.csv")
     print()
