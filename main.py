@@ -61,6 +61,7 @@ def do_job(job: str, data: structures.StreamData, columns, iters, radius, verbos
             logger.warning("Performing Job on " + col)
             result = averager.basic_2d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose)
+            print()
 
     elif job == 'basic2d_paral':
         for col in columns:
@@ -135,6 +136,10 @@ if __name__ == '__main__':
         for col in columns:  # first check if column exists
             if col not in data.dataset:
                 logger.error("Wrong Column: " + col)
+                exit(1)
 
         logger.warning("Started Job: " + args.job)
         do_job(args.job, data, columns, DEFAULT_ITERATIONS, DEFAULT_RADIUS, DEFAULT_VERBOSE)
+
+        logger.warning('All jobs Done!')
+    print()
