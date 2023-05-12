@@ -54,7 +54,7 @@ class AveragerGUI(QtWidgets.QMainWindow):
         # run the process
         # `start` takes the exec and a list of arguments
         command = self.make_run()
-        # print('Running: ' + command)
+        print('Running: ' + command)
         self.process.start(command)
 
     def open_file(self):
@@ -105,23 +105,34 @@ class AveragerGUI(QtWidgets.QMainWindow):
 
         command += '-j '
         if self.ui.basic2Button.isChecked():
-            command += 'basic2d '
+            command += 'basic2d,'
 
-        elif self.ui.basic2pButton.isChecked():
-            command += 'basic2d_paral '
+        if self.ui.basic2pButton.isChecked():
+            command += 'basic2d_paral,'
 
-        elif self.ui.basic3Button.isChecked():
-            command += 'basic3d '
+        if self.ui.basic3Button.isChecked():
+            command += 'basic3d,'
 
-        elif self.ui.basic3pButton.isChecked():
-            command += 'basic3d_paral '
+        if self.ui.basic3pButton.isChecked():
+            command += 'basic3d_paral,'
 
-        elif self.ui.basicGaussButton.isChecked():
-            command += 'gauss '
+        if self.ui.basicGaussButton.isChecked():
+            command += 'gauss,'
+
+        if self.ui.plot2dButton.isChecked():
+            command += 'plot2d,'
+
+        if self.ui.plot3dButton.isChecked():
+            command += 'scatter3d,'
+
+        command = command[:-1] + ' '
 
         command += '-c ' + '"' + self.ui.ColEdit.text() + '" '
 
         command += '-r ' + self.ui.RadiusEdit.text() + ' -i ' + self.ui.IterEdit.text()
+
+        if self.ui.OutputEdit.text() != '':
+            command += ' -o ' + self.ui.OutputEdit.text()
 
         return command
 

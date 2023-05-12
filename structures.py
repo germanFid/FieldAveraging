@@ -132,10 +132,12 @@ def update_dataset_column(data: StreamData, column: str, updating_list: np.ndarr
         column (str): Name of column to update
         updating_list (np.ndarray): 2d or 3d list with updated values
     """
-    z_dim, y_dim, x_dim = updating_list.shape
-    if z_dim == 0:
+    
+    if data.k == 0:
+        y_dim, x_dim = updating_list.shape
         data.dataset[column] = list(np.reshape(updating_list, (y_dim * x_dim)))
     else:
+        z_dim, y_dim, x_dim = updating_list.shape
         data.dataset[column] = list(np.reshape(updating_list, (z_dim * y_dim * x_dim)))
 
 def save_temp_streamdata(data: StreamData, filename):
