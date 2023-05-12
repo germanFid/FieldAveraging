@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 import matplotlib.style as mplstyle
 import numpy as np
 from matplotlib.colors import Normalize
@@ -107,6 +107,7 @@ def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
 def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_down: float = None,
                      normalize=None, title: str = None, xlabel: str = None, ylabel: str = None,
                      zlabel: str = None, colorbar: bool = False, cmap: str = "Spectral"):
+    mplstyle.use('fast')
     n, m, k = data.shape
     x, y, z = np.meshgrid(
         np.linspace(0, n - 1, n), np.linspace(0, m - 1, m), np.linspace(0, k - 1, k)

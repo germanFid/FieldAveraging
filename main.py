@@ -2,7 +2,7 @@ import argparse
 import structures
 import logging
 import averager
-import usefull_graphics
+import useful_graphics
 
 import numpy as np
 
@@ -94,7 +94,7 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
         for col in columns:
             print()
             logger.warning("Performing Job basic3d_paral on " + col)
-            rs.append({"result": averager.basic_2d_averaging_iterations(
+            rs.append({"result": averager.basic_3d_averaging_iterations(
                 np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
 
         results['jobs_avgs'].append(rs)
@@ -117,15 +117,15 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
         for col in columns:
             print()
             logger.warning("Performing Job plot2d on " + col)
-            usefull_graphics.plot_2d(structures.advance_to_column(data, col), title=col)
-        usefull_graphics.plt.show()
+            useful_graphics.plot_2d(structures.advance_to_column(data, col), title=col)
+        useful_graphics.plt.show()
 
     if 'scatter3d' in jobs:
         for col in columns:
             print()
             logger.warning("Performing Job scatter3d on " + col)
-            usefull_graphics.scatter_3d_array(structures.advance_to_column(data, col), title=col)
-        usefull_graphics.plt.show()
+            useful_graphics.scatter_3d_array(structures.advance_to_column(data, col), title=col)
+        useful_graphics.plt.show()
 
     return results
 
