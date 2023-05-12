@@ -120,6 +120,12 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             usefull_graphics.plot_2d(structures.advance_to_column(data, col), title=col)
         usefull_graphics.plt.show()
 
+    if 'scatter3d' in jobs:
+        for col in columns:
+            print()
+            logger.warning("Performing Job scatter3d on " + col)
+            usefull_graphics.scatter_3d_array(structures.advance_to_column(data, col), title=col)
+        usefull_graphics.plt.show()
 
     return results
 
