@@ -22,7 +22,8 @@ parser.add_argument('--leave', help='tkinter-output mode', action='store_true')
 parser.add_argument('--dimensions', '-d', help='dimensions seperated by comma', type=str)
 
 parser.add_argument('--job', '-j',
-                    help='job to do with opened Data {' + 'basic2d' + "'basic2d_paral', 'basic3d', 'basic3d_paral', 'gauss', 'plot2d', 'scatter3d'}",
+                    help='job to do with opened Data {' + 'basic2d' +
+                    "'basic2d_paral', 'basic3d', 'basic3d_paral', 'gauss', 'plot2d', 'scatter3d'}",
                     type=str)
 
 parser.add_argument('--columns', '-c', help='columns to do jobs seperated by comma', type=str)
@@ -48,12 +49,6 @@ logger = logging.getLogger()
 
 
 def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=False):
-    if iters != 1:
-        vv = True
-
-    else:
-        vv = False
-
     results = {
         "jobs_avgs": [],
         "jobs_grpx": []
@@ -65,7 +60,8 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             print()
             logger.warning("Performing Job basic2d on " + col)
             rs.append({"result": averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose), "column": col})
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False,
+                verbose), "column": col})
 
         results['jobs_avgs'].append(rs)
 
@@ -75,7 +71,8 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             print()
             logger.warning("Performing Job basic2d_paral on " + col)
             rs.append({"result": averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
+                DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
 
         results['jobs_avgs'].append(rs)
 
@@ -85,7 +82,8 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             print()
             logger.warning("Performing Job basic3d on " + col)
             rs.append({"result": averager.basic_3d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False, verbose), "column": col})
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False,
+                verbose), "column": col})
 
         results['jobs_avgs'].append(rs)
 
@@ -95,7 +93,8 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             print()
             logger.warning("Performing Job basic3d_paral on " + col)
             rs.append({"result": averager.basic_3d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
+                DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
 
         results['jobs_avgs'].append(rs)
 
@@ -105,10 +104,11 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
             print()
             logger.warning("Performing Job gauss on " + col)
             rs.append({"result": averager.gauss_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose, DEFAULT_MORE_VERBOSE), "column": col})
-            
+                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
+                DEFAULT_MORE_VERBOSE), "column": col})
+
         results['jobs_avgs'].append(rs)
-    
+
     if len(results['jobs_avgs']) > 0:
         for elem in results['jobs_avgs'][0]:
             structures.update_dataset_column(data, elem["column"], elem["result"])
@@ -195,7 +195,8 @@ if __name__ == '__main__':
                 structures.save_temp_streamdata(data, args.outfile)
                 logger.warning("Saving to " + args.outfile + ".out.csv done!")
 
-            except:
+            except Exception as ex:
+                print(ex)
                 logger.error("Error saving with your filename! Saving as out.csv")
                 structures.save_temp_streamdata(data, "out.csv")
 
