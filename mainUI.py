@@ -2,7 +2,7 @@ import sys
 import os
 import subprocess
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIcon
 
 from ui import Ui_MainWindow
@@ -44,10 +44,10 @@ class AveragerGUI(QtWidgets.QMainWindow):
         # Here we have to decode the QByteArray
         cursor.insertText(
             str(self.process.readAll(), CP_console))
-        
+
         cursor.insertText(
             str(self.process.readAllStandardError().data().decode(CP_console).rstrip(' \n')) + '\n')
-        
+
         self.ui.OutputBrowser.ensureCursorVisible()
 
     def callProgram(self):
@@ -72,8 +72,8 @@ class AveragerGUI(QtWidgets.QMainWindow):
         print("Executing: " + command)
 
         # Create a subprocess and start the ping command
-        ping_process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        previous_line = ''
+        ping_process = subprocess.Popen(command, shell=True,
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         self.ui.OutputBrowser.clear()
         for line in iter(ping_process.stdout.readline, b''):
@@ -84,9 +84,10 @@ class AveragerGUI(QtWidgets.QMainWindow):
 
             # text.insert(tk.END, line + '\n')
             self.ui.OutputBrowser.append(line)
-            previous_line = line
 
     def make_run(self):
+        # pylint: disable=too-complex
+
         command = 'python main.py '
 
         if self.ifile == '':
@@ -135,6 +136,7 @@ class AveragerGUI(QtWidgets.QMainWindow):
             command += ' -o ' + self.ui.OutputEdit.text()
 
         return command
+
 
 app = QtWidgets.QApplication([])
 application = AveragerGUI()

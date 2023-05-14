@@ -89,9 +89,6 @@ def advance_to_column(data: StreamData, column_name: str) -> np.array:
 
     column = data.dataset[column_name]
 
-    # Get the number of rows in the column
-    num_rows = column.shape[0]
-
     # Create a list to hold the data
     data_list = []
 
@@ -132,13 +129,14 @@ def update_dataset_column(data: StreamData, column: str, updating_list: np.ndarr
         column (str): Name of column to update
         updating_list (np.ndarray): 2d or 3d list with updated values
     """
-    
+
     if data.k == 0:
         y_dim, x_dim = updating_list.shape
         data.dataset[column] = list(np.reshape(updating_list, (y_dim * x_dim)))
     else:
         z_dim, y_dim, x_dim = updating_list.shape
         data.dataset[column] = list(np.reshape(updating_list, (z_dim * y_dim * x_dim)))
+
 
 def save_temp_streamdata(data: StreamData, filename):
     data.dataset.to_csv(filename + '.out.csv', index=False,
