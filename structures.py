@@ -1,22 +1,18 @@
 import pandas as pd
-import io
+import numpy as np
 
 
 class StreamData:
     """Field information class"""
     dataset = pd.DataFrame()
-    i, j = 0, 0
+    i, j, k = 0, 0, 0
 
-    def __init__(self, csvstr: str, i: int, j: int):
+    def __init__(self, csvstr: str, i: int, j: int, k: int = 0):
         # TODO: Check for correct data it should be csv-string
-        self.dataset = pd.read_csv(io.StringIO(csvstr))
+        self.dataset = pd.read_csv(csvstr)
         self.i = i
         self.j = j
-
-    def get_dataset_line(self, i: int, j: int):
-        """Returns DataFrame (dataset) line"""
-        row = i + j * self.j
-        return self.dataset.iloc[[row]]
+        self.k = k
 
 
 def parse_plt(path: str) -> StreamData:
@@ -88,59 +84,60 @@ def output_plt(data: StreamData, original_file: str, new_file: str, header=2):
                 fn.write("\n")
 
 
-def advance_to_vxu(data: StreamData):
-    """Outputs 2d list of Vx/U
-
-    Returns:
-        2dList
-    """
-
-    w, h = data.i, data.j
-    output = [[float(0) for x in range(h)] for y in range(w)]
-
-    for i in range(w):
-        for j in range(h):
-            output[i][j] = data.get_dataset_line(j, i)["Vx/U"].item()
-
-    return output
-
-
-def advance_to_column(data: StreamData, column_name: str):
-    """Outputs 2d list of column setting"""
+def advance_to_column(data: StreamData, column_name: str) -> np.array:
+    """Outputs 2D or 3D list of column setting"""
 
     column = data.dataset[column_name]
-
-    # Get the number of rows in the column
-    num_rows = column.shape[0]
 
     # Create a list to hold the data
     data_list = []
 
     # Iterate over the rows of the column and append each value to the list
-    for i in range(num_rows):
-        data_list.append(column[i])
+    data_list.append(column)
 
-    # Reshape the list into a 2D list with x and y dimensions
-    x_dim = data.i
-    y_dim = data.j
+    # Check if z_dim is 0, return 2D list
+    if data.k == 0:
+        # Reshape the list into a 2D list with x and y dimensions
+        x_dim = data.i
+        y_dim = data.j
 
-    data_2d = [data_list[i:i + x_dim] for i in range(0, y_dim * x_dim, x_dim)]
+        data_2d = np.reshape(np.asarray(data_list), (y_dim, x_dim))
 
-    # Return the result
-    return data_2d
+        # Return the result as 2D list
+        return data_2d
+
+    else:
+        # Reshape the list into a 3D list with x, y, and z dimensions
+        x_dim = data.i
+        y_dim = data.j
+        z_dim = data.k
+
+        # data_3d = [[data_list[z * num_rows * y_dim + y * y_dim + x] for x in range(x_dim)]
+        #            for y in range(y_dim) for z in range(z_dim)]
+
+        data_3d = np.reshape(np.asarray(data_list), (z_dim, y_dim, x_dim))
+
+        # Return the result as 3D list
+        return data_3d
 
 
-def update_dataset_column(data: StreamData, column: str, list):
+def update_dataset_column(data: StreamData, column: str, updating_list: np.ndarray):
     """Updates dataset column of StreamData
 
     Args:
         data (StreamData): StreamData to update
         column (str): Name of column to update
-        list (_type_): 2d list with updated values
+        updating_list (np.ndarray): 2d or 3d list with updated values
     """
 
-    n = 0
-    for i in range(data.i):
-        for j in range(data.j):
-            data.dataset.iloc[n][column] = list[i][j]
-            n += 1
+    if data.k == 0:
+        y_dim, x_dim = updating_list.shape
+        data.dataset[column] = list(np.reshape(updating_list, (y_dim * x_dim)))
+    else:
+        z_dim, y_dim, x_dim = updating_list.shape
+        data.dataset[column] = list(np.reshape(updating_list, (z_dim * y_dim * x_dim)))
+
+
+def save_temp_streamdata(data: StreamData, filename):
+    data.dataset.to_csv(filename + '.out.csv', index=False,
+                        chunksize=100000, encoding='utf-8')

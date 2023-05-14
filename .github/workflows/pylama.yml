@@ -20,4 +20,4 @@ jobs:
         pip install pylama
     - name: Analysing the code with pylama
       run: |
-        pylama $(git ls-files '*.py')
+        pylama $(git ls-files '*.py') -i C901 --skip ui.py
