@@ -443,7 +443,7 @@ def basic_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int =
 
 def gauss_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1, radius: int = 1,
                                   processes: int = 1, iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False) -> np.ndarray:
+                                  averaging_visuals: bool = False, leave: bool = True) -> np.ndarray:
     result = in_field
     if iterations_visuals:
         for i in tqdm(range(iterations_number)):

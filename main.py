@@ -47,6 +47,36 @@ LOG_FORMAT = '\n> %(asctime)s %(message)s\n'
 logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger()
 
+job_types = {
+    "basic_2d": averager.basic_2d_averaging_iterations,
+    "basic_2d_paral": averager.basic_2d_averaging_iterations,
+    "basic_3d":  averager.basic_3d_averaging_iterations,
+    "basic_3d_paral": averager.basic_3d_averaging_iterations
+}
+
+graphics_types = ['plot2d', 'scatter_3d']
+
+
+def perform(func, data: structures.StreamData, columns, iters, radius,
+            verbose=False, _job=""):
+    rs = []
+    proc = 0
+
+    if _job.find("paral") != -1:
+        proc = 4
+
+    else:
+        proc = 1
+
+    for col in columns:
+        print()
+        logger.warning(f"Performing Job {_job} on " + col)
+        rs.append({"result": func(
+            np.asarray(structures.advance_to_column(data, col)), iters, radius, proc, verbose,
+            DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
+
+    return rs
+
 
 def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=False):
     results = {
@@ -54,60 +84,12 @@ def do_job(jobs, data: structures.StreamData, columns, iters, radius, verbose=Fa
         "jobs_grpx": []
     }
 
-    if 'basic2d' in jobs:
-        rs = []
-        for col in columns:
-            print()
-            logger.warning("Performing Job basic2d on " + col)
-            rs.append({"result": averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False,
-                verbose), "column": col})
+    for job in jobs:
+        if job in graphics_types:
+            continue
 
-        results['jobs_avgs'].append(rs)
-
-    if 'basic2d_paral' in jobs:
-        rs = []
-        for col in columns:
-            print()
-            logger.warning("Performing Job basic2d_paral on " + col)
-            rs.append({"result": averager.basic_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
-                DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
-
-        results['jobs_avgs'].append(rs)
-
-    if 'basic3d' in jobs:
-        rs = []
-        for col in columns:
-            print()
-            logger.warning("Performing Job basic3d on " + col)
-            rs.append({"result": averager.basic_3d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 1, False,
-                verbose), "column": col})
-
-        results['jobs_avgs'].append(rs)
-
-    if 'basic3d_paral' in jobs:
-        rs = []
-        for col in columns:
-            print()
-            logger.warning("Performing Job basic3d_paral on " + col)
-            rs.append({"result": averager.basic_3d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
-                DEFAULT_MORE_VERBOSE, DEFAULT_LEAVE), "column": col})
-
-        results['jobs_avgs'].append(rs)
-
-    if 'gauss' in jobs:
-        rs = []
-        for col in columns:
-            print()
-            logger.warning("Performing Job gauss on " + col)
-            rs.append({"result": averager.gauss_2d_averaging_iterations(
-                np.asarray(structures.advance_to_column(data, col)), iters, radius, 4, verbose,
-                DEFAULT_MORE_VERBOSE), "column": col})
-
-        results['jobs_avgs'].append(rs)
+        results['jobs_avgs'].append(perform(job_types[job], data,
+                                            columns, iters, radius, verbose, job))
 
     if len(results['jobs_avgs']) > 0:
         for elem in results['jobs_avgs'][0]:
