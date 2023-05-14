@@ -64,46 +64,6 @@ def plot_2d_in_row(figures, titles=None, xlabels=None, ylabels=None,
     return fig
 
 
-def plot_3d_voxels(figure, title=None, xlabel=None, ylabel=None, zlabel=None,
-                   show_colorbar=False, font_size=12, normalize=None,
-                   exclude=None, cmap='Spectral'):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    x_size, y_size, z_size = figure.shape
-    plt.rcParams.update({'font.size': font_size})
-    # Ensure that a valid colormap is passed
-    try:
-        cmap_obj = plt.get_cmap(cmap)
-    except ValueError:
-        raise ValueError("Invalid colormap: {}".format(cmap))
-    data = figure
-    if exclude is not None:
-        data = np.where(abs(data) < exclude, np.nan, data)
-    if normalize is not None:
-        norm = Normalize(vmin=normalize[0], vmax=normalize[1])
-    else:
-        norm = Normalize(vmin=np.nanmin(data), vmax=np.nanmax(data))
-    if len(data.shape) == 3:
-        # Create a voxel grid and set the facecolors and edgecolors based on the normalized data
-        ax.voxels(data, facecolors=cmap_obj(norm(data)), edgecolor='k')
-    else:
-        raise ValueError("Data must be 3D array")
-    if title is not None:
-        ax.set_title(title)
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-    if zlabel is not None:
-        ax.set_zlabel(zlabel)
-    if show_colorbar:
-        # Create a colorbar for the normalized data
-        mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap_obj)
-        mappable.set_array(data)
-        plt.colorbar(mappable)
-    return fig
-
-
 def scatter_3d_array(data: np.ndarray, treeshold_up: float = None, treeshold_down: float = None,
                      normalize=None, title: str = None, xlabel: str = None, ylabel: str = None,
                      zlabel: str = None, colorbar: bool = False, cmap: str = "Spectral"):
