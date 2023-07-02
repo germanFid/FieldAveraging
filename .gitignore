@@ -1,4 +1,7 @@
 __pycache__/
-__pycache__
 *.csv
+*.png
+*.ipynb
 settings.json
+.vscode
+presentation
