@@ -2,8 +2,10 @@ import multiprocessing
 import numpy as np
 from tqdm import tqdm
 from typing import Tuple
+from numba import njit
 
 
+@njit
 def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: int) -> float:
     """
     Basic method of 3-Dimensional averaging. Takes average value of
@@ -13,7 +15,7 @@ def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: 
         j (int): index in column
         k (int): index in depth
         in_field (np.ndarray): field to get average value from
-        radius (int): averaging radius around this point
+        radius (int): averaging radius around array point
     Returns:
         float: peasantly averaged value of our 3d point in field
     """
@@ -37,7 +39,7 @@ def basic_3d_array_averaging(inputed_field: np.ndarray, radius: int,
     Function takes field and use basic 3d averaging method. Gives back averaged field
     Args:
         inputed_field (np.ndarray): field to get averaged
-        radius (int): averaging radius around this point
+        radius (int): averaging radius around array point
     Returns:
         np.ndarray: peasantly averaged 3d field
     """
@@ -73,7 +75,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
     Takes average value of all point around given point with given radius.
     Args:
         inputed_field (NDArray): field to get averaged
-        radius (int): averaging radius around this point
+        radius (int): averaging radius around array point
         max_processes (int): maximum of processes to use
         visuals (bool): enables progress bar verbose
     Returns:
@@ -87,8 +89,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
     chunksize = int(max([1, (n * m * d) / (4 * max_processes)]))
     if visuals:
         results = list(tqdm(pool.imap(process_func_3d, args_list, chunksize=chunksize),
-                            total=(n * m * d),
-                            miniters=1000, ncols=100, leave=False,
+                            total=(n * m * d), miniters=1000, ncols=100, leave=False,
                             position=0, desc="⚊ Iteration Progress"))
     else:
         results = list(pool.imap(process_func_3d,
@@ -104,6 +105,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
     return output_field
 
 
+@njit
 def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> float:
     n, m = in_field.shape
     i_start = max(0, i - radius)
@@ -123,7 +125,7 @@ def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int,
     all point around given point with given radius.
     Args:
         inputed_field (NDArray): field to get averaged
-        radius (int): averaging radius around this point
+        radius (int): averaging radius around array point
         visuals (bool): enables progress bar verbose
     Returns:
         NDArray: peasantly averaged 2d field
@@ -158,7 +160,7 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     Takes average value of all point around given point with given radius.
     Args:
         inputed_field (NDArray): field to get averaged
-        radius (int): averaging radius around this point
+        radius (int): averaging radius around array point
         max_processes (int): maximum of processes to use
         visuals (bool): enables progress bar verbose
     Returns:
@@ -444,8 +446,7 @@ def basic_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int =
 
 def gauss_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1, radius: int = 1,
                                   processes: int = 1, iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False,
-                                  leave: bool = True) -> np.ndarray:
+                                  averaging_visuals: bool = False) -> np.ndarray:
     result = in_field
     if iterations_visuals:
         for i in tqdm(range(iterations_number)):
