@@ -1,7 +1,7 @@
 from numba import cuda
 
 
-@cuda.jit('float64[:, :, :], int32, int32, int32, int32', device=True)
+@cuda.jit('float64(float64[:, :, :], int32, int32, int32, int32)', device=True)
 def cuda_average_this_3d_point(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
                                radius: int, i: int, j: int, k: int):
     """
@@ -83,7 +83,7 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     return output_array_gpu
 
 
-@cuda.jit('float64[:, :], int32, int32, int32', device=True)
+@cuda.jit('float64(float64[:, :], int32, int32, int32)', device=True)
 def cuda_average_this_2d_point(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
                                radius: int, i: int, j: int):
     """
