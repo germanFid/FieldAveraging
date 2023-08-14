@@ -7,93 +7,146 @@ from typing import Tuple
 TPB = 16
 
 
-def init_gauss_window_cuda(sigma: int) -> Tuple[np.ndarray, int, float]:
-    """
-    initing gauss window
-    Args:
-        sigma (int): sigma sets the radius of window and
-        influence on blur coef in gauss formula
-    Returns:
-        Tuple[np.ndarray, float]: returning window and sum of elems in window
-    """
-    window_size = int(np.ceil(3 * sigma))
-    window = np.zeros(2 * window_size + 1)
+class GaussWindowData:
 
-    s2 = 2 * sigma * sigma
-    const = np.sqrt(2 * np.pi) * sigma
+    def __init__(self, sigma):
+        self.sigma = sigma
+        self.window, self.size, self.sum = self.init_gauss_window_cuda(sigma)
+        self.gpu_window = []
 
-    window[window_size] = 1
-    for i in range(1, window_size + 1):
-        window[window_size - i] = window[window_size +
-                                         i] = np.exp(- i * i / s2) / const
-    window_sum = np.sum(window)
+    def init_gauss_window_cuda(sigma: int) -> Tuple[np.ndarray, int, float]:
+        """
+        initing gauss window
+        Args:
+            sigma (int): sigma sets the radius of window and
+            influence on blur coef in gauss formula
+        Returns:
+            Tuple[np.ndarray, int, float]: returning window, window size and 
+                                           sum of elems in window
+        """
+        window_size = int(np.ceil(3 * sigma))
+        window = np.zeros(2 * window_size + 1)
 
-    return window, window_size, window_sum
+        s2 = 2 * sigma * sigma
+        const = np.sqrt(2 * np.pi) * sigma
 
+        window[window_size] = 1
+        for i in range(1, window_size + 1):
+            window[window_size - i] = window[window_size +
+                                            i] = np.exp(- i * i / s2) / const
+        window_sum = np.sum(window)
 
-def get_blocks_per_grid(shapes: int):
-    match shapes:
-        case 1:
-            threadsPerBlock = (TPB,)
-            blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
-            blocksPerGrid = (blocksPerGrid_x)
-        case 2:
-            threadsPerBlock = (TPB, TPB)
-            blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
-            blocksPerGrid_y = int(np.ceil(data_to_handle.shape[1] / threadsPerBlock[1]))
-            blocksPerGrid = (blocksPerGrid_x, blocksPerGrid_y)
-        case 3:
-            threadsPerBlock = (TPB, TPB, TPB)
-            blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
-            blocksPerGrid_y = int(np.ceil(data_to_handle.shape[1] / threadsPerBlock[1]))
-            blocksPerGrid_z = int(np.ceil(data_to_handle.shape[2] / threadsPerBlock[2]))
-            blocksPerGrid = (blocksPerGrid_x, blocksPerGrid_y, blocksPerGrid_z)
-        case _:
-            print("Strange dimension, exitting...")
-            exit()
+        return window, window_size, window_sum
 
-    return blocksPerGrid, threadsPerBlock
+    def transfer_window_to_gpu(self):
+        self.gpu_window = cuda.to_device(self.window)
 
 
-def mov_window_and_data_arrs_to_gpu(
-        cpu_window: np.ndarray, cpu_data: np.ndarray) -> Tuple:
-    gpu_window = cuda.to_device(cpu_window)
+class VCardLaunchData:
+    def __init__(self, data_to_handle: np.ndarray):
+        self.blocksPerGrid, self.threadsPerBlock = self.get_blocks_threads_per_grid(data_to_handle)
+
+    def get_blocks_threads_per_grid(data_to_handle: np.ndarray): 
+        match data_to_handle.ndim:
+            case 1:
+                threadsPerBlock = (TPB,)
+                blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
+                blocksPerGrid = (blocksPerGrid_x)
+            case 2:
+                threadsPerBlock = (TPB, TPB)
+                blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
+                blocksPerGrid_y = int(np.ceil(data_to_handle.shape[1] / threadsPerBlock[1]))
+                blocksPerGrid = (blocksPerGrid_x, blocksPerGrid_y)
+            case 3:
+                threadsPerBlock = (TPB, TPB, TPB)
+                blocksPerGrid_x = int(np.ceil(data_to_handle.shape[0] / threadsPerBlock[0]))
+                blocksPerGrid_y = int(np.ceil(data_to_handle.shape[1] / threadsPerBlock[1]))
+                blocksPerGrid_z = int(np.ceil(data_to_handle.shape[2] / threadsPerBlock[2]))
+                blocksPerGrid = (blocksPerGrid_x, blocksPerGrid_y, blocksPerGrid_z)
+            case _:
+                print("Strange dimension, exitting...")
+                exit()
+
+        return blocksPerGrid, threadsPerBlock
+
+
+def average_with_gauss(cpu_data: np.ndarray, sigma: int, iterations: int = 1) -> np.ndarray:
+    launch_data = VCardLaunchData(cpu_data)
+    window_data = GaussWindowData(sigma)
+    window_data.transfer_window_to_gpu()
     gpu_old_data = cuda.to_device(cpu_data)
-    gpu_new_data = cuda.to_device(cpu_data)
-    return gpu_window, gpu_old_data, gpu_new_data
 
-
-def get_shape_data(array: np.ndarray):
-    return array.ndim
-
-
-def average_with_gauss(cpu_data: np.ndarray, sigma: int) -> np.ndarray:
-    dimension = get_shape_data(cpu_data)
-    blocksPerGrid, threadsPerBlock = get_blocks_per_grid(dimension)
-    cpu_window, window_size, window_sum = init_gauss_window_cuda(sigma)
-    gpu_window, gpu_old_data, gpu_new_data = mov_window_and_data_arrs_to_gpu(cpu_window, cpu_data)
-    gpu1_new_data = cuda.device_array_like(gpu_new_data)
-    print(blocksPerGrid, threadsPerBlock)
-    match dimension:
+    match cpu_data.ndim:
         case 1:
-            average_1d_by_x_gauss[blocksPerGrid, threadsPerBlock](gpu_old_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
+            output = average_1d_by_gauss(gpu_old_data, launch_data, window_data)
         case 2:
-            average_2d_by_x_gauss[blocksPerGrid, threadsPerBlock](gpu_old_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
-            average_2d_by_y_gauss[blocksPerGrid, threadsPerBlock](gpu_new_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
+            output = average_2d_by_gauss(gpu_old_data, launch_data, window_data)
         case 3:
-            average_3d_by_x_gauss[blocksPerGrid, threadsPerBlock](gpu_old_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
-            average_3d_by_y_gauss[blocksPerGrid, threadsPerBlock](gpu_new_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
-            average_3d_by_z_gauss[blocksPerGrid, threadsPerBlock](gpu_new_data, gpu_new_data, gpu_window,
-                                                                  window_size, window_sum)
+            output = average_3d_by_gauss(gpu_old_data, launch_data, window_data)
         case _:
             print("Strange dimension, exitting...")
             exit()
-    return gpu_new_data.copy_to_host()
+    return output
+
+
+def average_1d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                        launch_data: VCardLaunchData, window_data: GaussWindowData,
+                        iterations: int = 1):
+    oper_data = cuda.device_array_like(old_data)
+    oper2_data = cuda.device_array(old_data)
+    for i in range(iterations):
+        if i % 2 == 0:
+            average_1d_by_x_gauss[launch_data.blocksPerGrid,
+                                  launch_data.threadsPerBlock](oper_data, oper2_data,
+                                                               window_data.gpu_window, window_data.size,
+                                                               window_data.sum)           
+        else:
+            average_1d_by_x_gauss[launch_data.blocksPerGrid,
+                                  launch_data.threadsPerBlock](oper2_data, oper_data,
+                                                               window_data.gpu_window, window_data.size,
+                                                               window_data.sum)
+    if iterations % 2 == 1:
+        return oper2_data.copy_to_host()
+    return oper_data.copy_to_host()
+
+
+
+def average_2d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                        launch_data: VCardLaunchData, window_data: GaussWindowData,
+                        iterations: int = 1):
+    output = cuda.device_array_like(old_data)
+    oper_data = cuda.device_array(old_data)
+    for i in range(iterations):
+        average_2d_by_x_gauss[launch_data.blocksPerGrid,
+                              launch_data.threadsPerBlock](output, oper_data,
+                                                           window_data.gpu_window, window_data.size,
+                                                           window_data.sum)
+        average_2d_by_y_gauss[launch_data.blocksPerGrid,
+                              launch_data.threadsPerBlock](oper_data, output,
+                                                           window_data.gpu_window, window_data.size,
+                                                           window_data.sum)
+    return output.copy_to_host()
+
+
+def average_3d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                        launch_data: VCardLaunchData, window_data: GaussWindowData,
+                        iterations: int = 1):
+    output = cuda.device_array(old_data)
+    oper_data = cuda.device_array_like(old_data)
+    for i in range(iterations):
+        average_3d_by_x_gauss[launch_data.blocksPerGrid,
+                              launch_data.threadsPerBlock](oper_data, output,
+                                                           window_data.gpu_window, window_data.size,
+                                                                window_data.sum)
+        average_3d_by_y_gauss[launch_data.blocksPerGrid,
+                              launch_data.threadsPerBlock](output, oper_data,
+                                                           window_data.gpu_window, window_data.size,
+                                                                window_data.sum)
+        average_3d_by_z_gauss[launch_data.blocksPerGrid,
+                              launch_data.threadsPerBlock](oper_data, output,
+                                                           window_data.gpu_window, window_data.size,
+                                                           window_data.sum)
+    return output.copy_to_host()
 
 
 @cuda.jit('void(float64[:], float64[:], float64[:],\
@@ -244,12 +297,3 @@ def average_3d_by_z_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
             window_index += 1
 
         new_data[z_th][y_th][x_th] = temp_elem / window_sum
-
-
-
-if (__name__ == '__main__'):
-    new_data = average_with_gauss(data_to_handle, 1)
-    new_data1 = average_2d_by_gauss(data_to_handle, 1)
-    
-
-    (new_data == new_data1).all
