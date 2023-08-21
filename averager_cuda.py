@@ -3,15 +3,19 @@ import numpy as np
 from CUDA_general import VCardLaunchData
 
 
-def average_basic_cuda(input_array: np.ndarray, radius: int, iterations: int = 1) -> np.ndarray:
+def cuda_basic_averaging(input_array: np.ndarray, radius: int, iterations: int = 1) -> np.ndarray:
     launch_data = VCardLaunchData(input_array)
     input_array_gpu = cuda.to_device(input_array)
 
     match input_array.ndim:
         case 2:
-            output = cuda_basic_2d_array_averaging(input_array_gpu, radius, launch_data)
+            output = cuda_basic_2d_array_averaging(input_array_gpu, radius,
+                                                   launch_data,
+                                                   iterations)
         case 3:
-            output = cuda_basic_3d_array_averaging(input_array_gpu, radius, launch_data)
+            output = cuda_basic_3d_array_averaging(input_array_gpu, radius,
+                                                   launch_data,
+                                                   iterations)
         case _:
             print("Strange dimension, exitting...")
             exit()
@@ -82,7 +86,6 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
         input_array_gpu (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
         radius (int): averaging radius around array point
         launch_data (VCardLaunchData): Contains threads per block and block per grid info
-        shouldn't be more than 512/1024. Defaults to (8, 8, 8).
 
     Returns:
         cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 3d field
@@ -92,7 +95,7 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
         cuda_kernel_field_average_3d[launch_data.blocksPerGrid, launch_data.threadsPerBlock](
             input_array_gpu, output_array_gpu, radius)
         input_array_gpu = output_array_gpu
-    return output_array_gpu
+    return output_array_gpu.copy_to_host()
 
 
 @cuda.jit('float64(float64[:, :], int32, int32, int32)', device=True)
@@ -145,25 +148,23 @@ def cuda_kernel_field_average_2d(input_array: cuda.cudadrv.devicearray.DeviceNDA
 
 def cuda_basic_2d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.DeviceNDArray,
                                   radius: int,
-                                  block_shape: tuple = (16, 16)):
+                                  launch_data: VCardLaunchData,
+                                  iterations: int = 1):
     """
-    Function that presets cuda GPU settings and launch kernel function of basic 2d averaging.
+    Function that presets cuda GPU setting and launch kernel function of basic 2d averaging.
     Takes cuda type DeviceNDArray and returns same type, further parsing to host is needed.
 
     Args:
         input_array_gpu (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
         radius (int): averaging radius around array point
-        block_shape (tuple, optional): Number of threads in each block dimension, total number
-        shouldn't be more than 512/1024. Defaults to (16, 16).
+        launch_data (VCardLaunchData): Contains threads per block and block per grid info
 
     Returns:
-        cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 3d field
+        cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 2d field
     """
     output_array_gpu = cuda.device_array_like(input_array_gpu)
-    threads_per_block = block_shape
-    blocks_per_grid_x = int(np.ceil(input_array_gpu.shape[0] / threads_per_block[0]))
-    blocks_per_grid_y = int(np.ceil(input_array_gpu.shape[1] / threads_per_block[1]))
-    blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
-    cuda_kernel_field_average_2d[blocks_per_grid, threads_per_block](
-        input_array_gpu, output_array_gpu, radius)
-    return output_array_gpu
+    for i in range(iterations):
+        cuda_kernel_field_average_2d[launch_data.blocksPerGrid, launch_data.threadsPerBlock](
+            input_array_gpu, output_array_gpu, radius)
+        input_array_gpu = output_array_gpu
+    return output_array_gpu.copy_to_host()
