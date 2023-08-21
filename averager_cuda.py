@@ -1,6 +1,8 @@
 from numba import cuda
 import numpy as np
+
 from CUDA_general import VCardLaunchData
+from averager_gauss_cuda import cuda_gauss_averaging
 
 
 def cuda_basic_averaging(input_array: np.ndarray, radius: int, iterations: int = 1) -> np.ndarray:

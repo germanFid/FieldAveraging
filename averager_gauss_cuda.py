@@ -1,6 +1,4 @@
-import numpy as np
-from numba import cuda
-from CUDA_general import VCardLaunchData, GaussWindowData
+from CUDA_general import np, cuda, VCardLaunchData, GaussWindowData
 
 
 def average_with_gauss(cpu_data: np.ndarray, sigma: int, iterations: int = 1) -> np.ndarray:
@@ -32,7 +30,7 @@ def average_1d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
                                   launch_data.threadsPerBlock](old_data, oper_data,
                                                                window_data.gpu_window,
                                                                window_data.size,
-                                                               window_data.sum)           
+                                                               window_data.sum)
         else:
             average_1d_by_x_gauss[launch_data.blocksPerGrid,
                                   launch_data.threadsPerBlock](oper_data, old_data,
