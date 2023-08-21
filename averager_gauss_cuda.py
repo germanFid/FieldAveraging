@@ -98,12 +98,14 @@ def average_1d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
         if i % 2 == 0:
             average_1d_by_x_gauss[launch_data.blocksPerGrid,
                                   launch_data.threadsPerBlock](oper_data, oper2_data,
-                                                               window_data.gpu_window, window_data.size,
+                                                               window_data.gpu_window,
+                                                               window_data.size,
                                                                window_data.sum)           
         else:
             average_1d_by_x_gauss[launch_data.blocksPerGrid,
                                   launch_data.threadsPerBlock](oper2_data, oper_data,
-                                                               window_data.gpu_window, window_data.size,
+                                                               window_data.gpu_window,
+                                                               window_data.size,
                                                                window_data.sum)
     if iterations % 2 == 1:
         return oper2_data.copy_to_host()
@@ -137,11 +139,11 @@ def average_3d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
         average_3d_by_x_gauss[launch_data.blocksPerGrid,
                               launch_data.threadsPerBlock](oper_data, output,
                                                            window_data.gpu_window, window_data.size,
-                                                                window_data.sum)
+                                                           window_data.sum)
         average_3d_by_y_gauss[launch_data.blocksPerGrid,
                               launch_data.threadsPerBlock](output, oper_data,
                                                            window_data.gpu_window, window_data.size,
-                                                                window_data.sum)
+                                                           window_data.sum)
         average_3d_by_z_gauss[launch_data.blocksPerGrid,
                               launch_data.threadsPerBlock](oper_data, output,
                                                            window_data.gpu_window, window_data.size,
