@@ -3,6 +3,7 @@ from numba import cuda
 import numpy as np
 import os
 
+
 TPB = 8
 
 
@@ -13,7 +14,7 @@ class GaussWindowData:
         self.window, self.size, self.sum = self.init_gauss_window_cuda(sigma)
         self.gpu_window = []
 
-    def init_gauss_window_cuda(sigma: int) -> Tuple[np.ndarray, int, float]:
+    def init_gauss_window_cuda(self, sigma: int) -> Tuple[np.ndarray, int, float]:
         """
         initing gauss window
         Args:
@@ -45,7 +46,7 @@ class VCardLaunchData:
     def __init__(self, data_to_handle: np.ndarray):
         self.blocksPerGrid, self.threadsPerBlock = self.get_blocks_threads_per_grid(data_to_handle)
 
-    def get_blocks_threads_per_grid(data_to_handle: np.ndarray):
+    def get_blocks_threads_per_grid(self, data_to_handle: np.ndarray):
         match data_to_handle.ndim:
             case 1:
                 threadsPerBlock = (TPB,)
