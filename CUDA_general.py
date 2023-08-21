@@ -3,6 +3,7 @@ from numba import cuda
 import numpy as np
 import os
 
+
 TPB = 8
 
 
@@ -13,7 +14,7 @@ class GaussWindowData:
         self.window, self.size, self.sum = self.init_gauss_window_cuda(sigma)
         self.gpu_window = []
 
-    def init_gauss_window_cuda(sigma: int) -> Tuple[np.ndarray, int, float]:
+    def init_gauss_window_cuda(self, sigma: int) -> Tuple[np.ndarray, int, float]:
         """
         initing gauss window
         Args:
