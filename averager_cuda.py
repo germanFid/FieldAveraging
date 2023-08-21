@@ -90,7 +90,7 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     Returns:
         cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 3d field
     """
-    output_array_gpu = cuda.device_array_like(input_array_gpu)
+    output_array_gpu = cuda.device_array(input_array_gpu.shape, input_array_gpu.dtype)
     for i in range(iterations):
         cuda_kernel_field_average_3d[launch_data.blocksPerGrid, launch_data.threadsPerBlock](
             input_array_gpu, output_array_gpu, radius)
@@ -162,7 +162,7 @@ def cuda_basic_2d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     Returns:
         cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 2d field
     """
-    output_array_gpu = cuda.device_array_like(input_array_gpu)
+    output_array_gpu = cuda.device_array(input_array_gpu.shape, input_array_gpu.dtype)
     for i in range(iterations):
         cuda_kernel_field_average_2d[launch_data.blocksPerGrid, launch_data.threadsPerBlock](
             input_array_gpu, output_array_gpu, radius)
