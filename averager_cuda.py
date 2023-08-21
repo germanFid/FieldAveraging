@@ -1,4 +1,21 @@
 from numba import cuda
+import numpy as np
+from CUDA_general import VCardLaunchData
+
+
+def average_basic_cuda(input_array: np.ndarray, radius: int, iterations: int = 1) -> np.ndarray:
+    launch_data = VCardLaunchData(input_array)
+    input_array_gpu = cuda.to_device(input_array)
+
+    match input_array.ndim:
+        case 2:
+            output = cuda_basic_2d_array_averaging(input_array_gpu, radius, launch_data)
+        case 3:
+            output = cuda_basic_3d_array_averaging(input_array_gpu, radius, launch_data)
+        case _:
+            print("Strange dimension, exitting...")
+            exit()
+    return output
 
 
 @cuda.jit('float64(float64[:, :, :], int32, int32, int32, int32)', device=True)
@@ -55,7 +72,8 @@ def cuda_kernel_field_average_3d(input_array: cuda.cudadrv.devicearray.DeviceNDA
 
 def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.DeviceNDArray,
                                   radius: int,
-                                  block_shape: tuple = (8, 8, 8)):
+                                  launch_data: VCardLaunchData,
+                                  iterations: int = 1):
     """
     Function that presets cuda GPU setting and launch kernel function of basic 3d averaging.
     Takes cuda type DeviceNDArray and returns same type, further parsing to host is needed.
@@ -63,23 +81,17 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     Args:
         input_array_gpu (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
         radius (int): averaging radius around array point
-        block_shape (tuple, optional): Number of threads in each block dimension, total number
+        launch_data (VCardLaunchData): Contains threads per block and block per grid info
         shouldn't be more than 512/1024. Defaults to (8, 8, 8).
 
     Returns:
         cuda.cudadrv.devicearray.DeviceNDArray: peasantly averaged 3d field
     """
     output_array_gpu = cuda.device_array_like(input_array_gpu)
-    threads_per_block = block_shape
-    blocks_per_grid_x = (input_array_gpu.shape[0] + threads_per_block[0] - 1)\
-        // threads_per_block[0]
-    blocks_per_grid_y = (input_array_gpu.shape[1] + threads_per_block[1] - 1)\
-        // threads_per_block[1]
-    blocks_per_grid_z = (input_array_gpu.shape[2] + threads_per_block[2] - 1)\
-        // threads_per_block[2]
-    blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y, blocks_per_grid_z)
-    cuda_kernel_field_average_3d[blocks_per_grid, threads_per_block](
-        input_array_gpu, output_array_gpu, radius)
+    for i in range(iterations):
+        cuda_kernel_field_average_3d[launch_data.blocksPerGrid, launch_data.threadsPerBlock](
+            input_array_gpu, output_array_gpu, radius)
+        input_array_gpu = output_array_gpu
     return output_array_gpu
 
 
@@ -149,10 +161,8 @@ def cuda_basic_2d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     """
     output_array_gpu = cuda.device_array_like(input_array_gpu)
     threads_per_block = block_shape
-    blocks_per_grid_x = (input_array_gpu.shape[0] + threads_per_block[0] - 1)\
-        // threads_per_block[0]
-    blocks_per_grid_y = (input_array_gpu.shape[1] + threads_per_block[1] - 1)\
-        // threads_per_block[1]
+    blocks_per_grid_x = int(np.ceil(input_array_gpu.shape[0] / threads_per_block[0]))
+    blocks_per_grid_y = int(np.ceil(input_array_gpu.shape[1] / threads_per_block[1]))
     blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
     cuda_kernel_field_average_2d[blocks_per_grid, threads_per_block](
         input_array_gpu, output_array_gpu, radius)

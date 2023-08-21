@@ -3,54 +3,9 @@ import structures
 import logging
 import averager
 import useful_graphics
-
 import numpy as np
-
+from CUDA_general import detect_cuda
 from numba import cuda
-from numba.cuda import list_devices
-import os
-
-
-def detect_cuda():
-    """
-    Detect supported CUDA hardware and print a summary of the detected hardware.
-
-    Returns a boolean indicating whether any supported devices were detected.
-    """
-    devlist = list_devices()
-    print('Found %d CUDA devices' % len(devlist))
-    supported_count = 0
-    for dev in devlist:
-        attrs = []
-        cc = dev.compute_capability
-        kernel_timeout = dev.KERNEL_EXEC_TIMEOUT
-        tcc = dev.TCC_DRIVER
-        fp32_to_fp64_ratio = dev.SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO
-        attrs += [('Compute Capability', '%d.%d' % cc)]
-        attrs += [('PCI Device ID', dev.PCI_DEVICE_ID)]
-        attrs += [('PCI Bus ID', dev.PCI_BUS_ID)]
-        attrs += [('UUID', dev.uuid)]
-        attrs += [('Watchdog', 'Enabled' if kernel_timeout else 'Disabled')]
-        if os.name == "nt":
-            attrs += [('Compute Mode', 'TCC' if tcc else 'WDDM')]
-        attrs += [('FP32/FP64 Performance Ratio', fp32_to_fp64_ratio)]
-        if cc < (3, 5):
-            support = '[NOT SUPPORTED: CC < 3.5]'
-        elif cc < (5, 0):
-            support = '[SUPPORTED (DEPRECATED)]'
-            supported_count += 1
-        else:
-            support = '[SUPPORTED]'
-            supported_count += 1
-
-        print('id %d    %20s %40s' % (dev.id, dev.name, support))
-        for key, val in attrs:
-            print('%40s: %s' % (key, val))
-
-    print('Summary:')
-    print('\t%d/%d devices are supported' % (supported_count, len(devlist)))
-    return supported_count
-
 
 number_of_devices = detect_cuda()
 match number_of_devices:
