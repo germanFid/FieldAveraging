@@ -5,8 +5,78 @@ from typing import Tuple
 from numba import njit
 
 
+def basic_2d_averaging_iterations(in_field: np.ndarray, radius: int = 1,
+                                  iterations_number: int = 1,
+                                  processes: int = 1,
+                                  iterations_visuals: bool = False,
+                                  averaging_visuals: bool = False,
+                                  leave: bool = True) -> np.ndarray:
+    result = in_field
+    if iterations_visuals:
+        for i in tqdm(range(iterations_number), desc="⚊ Total Progress", position=1, leave=leave):
+            result = basic_2d_array_averaging_parallel(np.asarray(result), radius=radius,
+                                                       max_processes=processes,
+                                                       visuals=averaging_visuals)
+    else:
+        for i in range(iterations_number):
+            result = basic_2d_array_averaging_parallel(np.asarray(result), radius=radius,
+                                                       max_processes=processes,
+                                                       visuals=averaging_visuals)
+    return (result)
+
+
+def gauss_2d_averaging_iterations(in_field: np.ndarray, radius: int = 1,
+                                  iterations_number: int = 1,
+                                  processes: int = 1,
+                                  iterations_visuals: bool = False,
+                                  averaging_visuals: bool = False) -> np.ndarray:
+    result = in_field
+    if iterations_visuals:
+        for i in tqdm(range(iterations_number)):
+            result = average_2d_by_gauss(np.asarray(result), sigma=radius)
+    else:
+        for i in range(iterations_number):
+            result = average_2d_by_gauss(np.asarray(result), sigma=radius)
+    return (result)
+
+
+def basic_3d_averaging_iterations(in_field: np.ndarray, radius: int = 1,
+                                  iterations_number: int = 1,
+                                  processes: int = 1,
+                                  iterations_visuals: bool = False,
+                                  averaging_visuals: bool = False,
+                                  leave: bool = True) -> np.ndarray:
+    result = in_field
+    if iterations_visuals:
+        for i in tqdm(range(iterations_number), desc="⚊ Total Progress", position=1, leave=leave):
+            result = basic_3d_array_averaging_parallel(np.asarray(result), radius=radius,
+                                                       max_processes=processes,
+                                                       visuals=averaging_visuals)
+    else:
+        for i in range(iterations_number):
+            result = basic_3d_array_averaging_parallel(np.asarray(result), radius=radius,
+                                                       max_processes=processes,
+                                                       visuals=averaging_visuals)
+    return (result)
+
+
+def gauss_3d_averaging_iterations(in_field: np.ndarray, radius: int = 1,
+                                  iterations_number: int = 1,
+                                  processes: int = 1,
+                                  iterations_visuals: bool = False,
+                                  averaging_visuals: bool = False) -> np.ndarray:
+    result = in_field
+    if iterations_visuals:
+        for i in tqdm(range(iterations_number)):
+            result = average_3d_by_gauss(np.asarray(result), sigma=radius)
+    else:
+        for i in range(iterations_number):
+            result = average_3d_by_gauss(np.asarray(result), sigma=radius)
+    return (result)
+
+
 @njit
-def average_this_3d_point(i: int, j: int, k: int, in_field: np.ndarray, radius: int) -> float:
+def average_this_3d_point(in_field: np.ndarray, radius: int, i: int, j: int, k: int) -> float:
     """
     Basic method of 3-Dimensional averaging. Takes average value of
     all point around given point with given radius.
@@ -50,21 +120,21 @@ def basic_3d_array_averaging(inputed_field: np.ndarray, radius: int,
             for i in range(n):
                 for j in range(m):
                     for k in range(d):
-                        output_field[i][j][k] = average_this_3d_point(i, j, k, inputed_field,
-                                                                      radius)
+                        output_field[i][j][k] = average_this_3d_point(inputed_field,
+                                                                      radius, i, j, k)
                         pbar.update(1)
     else:
         for i in range(n):
             for j in range(m):
                 for k in range(d):
-                    output_field[i][j][k] = average_this_3d_point(
-                        i, j, k, inputed_field, radius)
+                    output_field[i][j][k] = average_this_3d_point(inputed_field,
+                                                                  radius, i, j, k)
     return output_field
 
 
 def process_func_3d(args):
-    i, j, k, inputed_field, radius, average_this_3d_point_func = args
-    return average_this_3d_point_func(i, j, k, inputed_field, radius)
+    inputed_field, radius, i, j, k, average_this_3d_point_func = args
+    return average_this_3d_point_func(inputed_field, radius, i, j, k)
 
 
 def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
@@ -84,7 +154,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
     n, m, d = inputed_field.shape
     output_field = np.zeros((n, m, d))
     pool = multiprocessing.Pool(processes=max_processes)
-    args_list = [(i, j, k, inputed_field, radius, average_this_3d_point)
+    args_list = [(inputed_field, radius, i, j, k, average_this_3d_point)
                  for i in range(n) for j in range(m) for k in range(d)]
     chunksize = int(max([1, (n * m * d) / (4 * max_processes)]))
     if visuals:
@@ -106,7 +176,7 @@ def basic_3d_array_averaging_parallel(inputed_field: np.ndarray,
 
 
 @njit
-def average_this_2d_point(i: int, j: int, in_field: np.ndarray, radius: int) -> float:
+def average_this_2d_point(in_field: np.ndarray, radius: int, i: int, j: int) -> float:
     n, m = in_field.shape
     i_start = max(0, i - radius)
     i_end = min(n - 1, i + radius)
@@ -136,20 +206,20 @@ def basic_2d_array_averaging(inputed_field: np.ndarray, radius: int,
         with tqdm(total=n * m) as pbar:
             for i in range(n):
                 for j in range(m):
-                    output_field[i][j] = average_this_2d_point(
-                        i, j, inputed_field, radius)
+                    output_field[i][j] = average_this_2d_point(inputed_field,
+                                                               radius, i, j)
                     pbar.update(1)
     else:
         for i in range(n):
             for j in range(m):
-                output_field[i][j] = average_this_2d_point(
-                    i, j, inputed_field, radius)
+                output_field[i][j] = average_this_2d_point(inputed_field,
+                                                           radius, i, j)
     return output_field
 
 
 def process_func_2d(args):
-    i, j, inputed_field, radius, average_this_2d_point_func = args
-    return average_this_2d_point_func(i, j, inputed_field, radius)
+    inputed_field, radius, i, j, average_this_2d_point_func = args
+    return average_this_2d_point_func(inputed_field, radius, i, j)
 
 
 def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
@@ -169,7 +239,7 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     n, m = inputed_field.shape
     output_field = np.zeros((n, m))
     pool = multiprocessing.Pool(processes=max_processes)
-    args_list = [(i, j, inputed_field, radius, average_this_2d_point)
+    args_list = [(inputed_field, radius, i, j, average_this_2d_point)
                  for i in range(n) for j in range(m)]
     chunksize = int(max([1, (n * m) / (4 * max_processes)]))
     if visuals:
@@ -189,6 +259,7 @@ def basic_2d_array_averaging_parallel(inputed_field: np.ndarray,
     return output_field
 
 
+@njit
 def init_gauss_window(sigma: int) -> Tuple[np.ndarray, float]:
     """
     initing gauss window
@@ -395,7 +466,7 @@ def average_3d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     return copied_field
 
 
-def average_2d_by_gauss(in_field, sigma) -> np.ndarray:
+def average_2d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     """
     Gauss method of 2-Dimensional averaging going line-by-line
     and doesnt take care of the border.
@@ -423,76 +494,3 @@ def average_2d_by_gauss(in_field, sigma) -> np.ndarray:
             copied_field, window, window_sum, window_size, height, x)
 
     return copied_field
-
-
-def basic_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1,
-                                  radius: int = 1, processes: int = 1,
-                                  iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False,
-                                  leave: bool = True) -> np.ndarray:
-    result = in_field
-    if iterations_visuals:
-        for i in tqdm(range(iterations_number), desc="⚊ Total Progress", position=1, leave=leave):
-            result = basic_2d_array_averaging_parallel(np.asarray(result), radius=radius,
-                                                       max_processes=processes,
-                                                       visuals=averaging_visuals)
-    else:
-        for i in range(iterations_number):
-            result = basic_2d_array_averaging_parallel(np.asarray(result), radius=radius,
-                                                       max_processes=processes,
-                                                       visuals=averaging_visuals)
-    return (result)
-
-
-def gauss_2d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1, radius: int = 1,
-                                  processes: int = 1, iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False) -> np.ndarray:
-    result = in_field
-    if iterations_visuals:
-        for i in tqdm(range(iterations_number)):
-            result = average_2d_by_gauss(np.asarray(result), sigma=radius)
-    else:
-        for i in range(iterations_number):
-            result = average_2d_by_gauss(np.asarray(result), sigma=radius)
-    return (result)
-
-
-def basic_3d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1,
-                                  radius: int = 1, processes: int = 1,
-                                  iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False,
-                                  leave: bool = True) -> np.ndarray:
-    result = in_field
-    if iterations_visuals:
-        for i in tqdm(range(iterations_number), desc="⚊ Total Progress", position=1, leave=leave):
-            result = basic_3d_array_averaging_parallel(np.asarray(result), radius=radius,
-                                                       max_processes=processes,
-                                                       visuals=averaging_visuals)
-    else:
-        for i in range(iterations_number):
-            result = basic_3d_array_averaging_parallel(np.asarray(result), radius=radius,
-                                                       max_processes=processes,
-                                                       visuals=averaging_visuals)
-    return (result)
-
-
-def gauss_3d_averaging_iterations(in_field: np.ndarray, iterations_number: int = 1, radius: int = 1,
-                                  processes: int = 1, iterations_visuals: bool = False,
-                                  averaging_visuals: bool = False) -> np.ndarray:
-    result = in_field
-    if iterations_visuals:
-        for i in tqdm(range(iterations_number)):
-            result = average_3d_by_gauss(np.asarray(result), sigma=radius)
-    else:
-        for i in range(iterations_number):
-            result = average_3d_by_gauss(np.asarray(result), sigma=radius)
-    return (result)
-
-
-def test():
-    averaging_width = 1
-    w, h = 5, 3
-    input_field = [[float(0) for y in range(h)] for x in range(w)]
-    input_field[4][2] = 15
-    print(input_field)
-    print(basic_2d_array_averaging(input_field, averaging_width))
