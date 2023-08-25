@@ -1,10 +1,14 @@
 import customtkinter
 
+JOB_CONFIG = [["Basic 2D","basic_2d"], ["Basic 2D Parallel", "basic2d_paral"], 
+              ["Basic 3D", "basic3d"], ["Basic 3D Parallel","basic3d_paral"], ["Gauss", "gauss"]]
+
 def button_callback():
     print("button pressed")
 
 app = customtkinter.CTk()
-app.title("my app")
+app.title("Averager GUI - Blooming Lycoris")
+app.resizable(False, False)
 # app.geometry("400x150")
 app.grid_columnconfigure((0, 1), weight=1)
 
@@ -37,5 +41,39 @@ y_entry = customtkinter.CTkEntry(dim_frame, placeholder_text='Y', width=70)
 y_entry.grid(row=1, column=1, padx=10, pady=10, sticky='ew')
 z_entry = customtkinter.CTkEntry(dim_frame, placeholder_text='Z', width=70)
 z_entry.grid(row=1, column=2, padx=10, pady=10, sticky='ew')
+
+job_frame = customtkinter.CTkFrame(left_frame)
+job_frame.grid(row=4, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
+
+job_enrties = []
+
+job_label = customtkinter.CTkLabel(job_frame, text='Job', anchor="w")
+job_label.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+
+for i, entry in enumerate(JOB_CONFIG):
+    job_checkbox = customtkinter.CTkCheckBox(job_frame, text=entry[0])
+    job_checkbox.grid(row=i + 1, column=0, padx=10, pady=10, sticky='ew')
+    job_enrties.append(job_checkbox)
+
+radius_label = customtkinter.CTkLabel(left_frame, text='Radius', anchor="w")
+radius_label.grid(row=5, column=0, padx=10, pady=10, sticky='ew')
+
+radius_entry = customtkinter.CTkEntry(left_frame)
+radius_entry.grid(row=5, column=1, padx=10, pady=10, sticky='ew')
+
+iter_label = customtkinter.CTkLabel(left_frame, text='Iterations', anchor="w")
+iter_label.grid(row=6, column=0, padx=10, pady=10, sticky='ew')
+
+iter_entry = customtkinter.CTkEntry(left_frame)
+iter_entry.grid(row=6, column=1, padx=10, pady=10, sticky='ew')
+
+col_label = customtkinter.CTkLabel(left_frame, text='Key Columns', anchor="w")
+col_label.grid(row=7, column=0, padx=10, pady=10, sticky='ew')
+
+col_entry = customtkinter.CTkEntry(left_frame)
+col_entry.grid(row=7, column=1, padx=10, pady=10, sticky='ew')
+
+run_button = customtkinter.CTkButton(left_frame, text="Run!", command=button_callback)
+run_button.grid(row=8, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
 
 app.mainloop()
