@@ -8,7 +8,7 @@ app.title("my app")
 # app.geometry("400x150")
 app.grid_columnconfigure((0, 1), weight=1)
 
-left_frame = customtkinter.CTkFrame(app)
+left_frame = customtkinter.CTkFrame(app, fg_color="transparent")
 left_frame.grid_columnconfigure((0, 1), weight=1)
 left_frame.grid(row=0, column=0, padx=10, pady=10, sticky='w')
 
