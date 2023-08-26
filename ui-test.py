@@ -33,7 +33,7 @@ dim_frame.grid(row=3, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
 dim_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
 dim_label = customtkinter.CTkLabel(dim_frame, text='Dimensions', anchor="w")
-dim_label.grid(row=0, column=0, padx=10, pady=10, sticky='ew', columnspan=3)
+dim_label.grid(row=0, column=0, padx=10, pady=5, sticky='ew', columnspan=3)
 
 x_entry = customtkinter.CTkEntry(dim_frame, placeholder_text='X', width=70)
 x_entry.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
@@ -48,11 +48,18 @@ job_frame.grid(row=4, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
 job_enrties = []
 
 job_label = customtkinter.CTkLabel(job_frame, text='Job', anchor="w")
-job_label.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+job_label.grid(row=0, column=0, padx=10, pady=5, sticky='ew')
+
+job_tabview = customtkinter.CTkTabview(job_frame)
+job_tabview.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
+
+cpu_tab = job_tabview.add("CPU")
+gpu_tab = job_tabview.add("GPU")
+job_tabview.set("CPU")
 
 for i, entry in enumerate(JOB_CONFIG):
-    job_checkbox = customtkinter.CTkCheckBox(job_frame, text=entry[0])
-    job_checkbox.grid(row=i + 1, column=0, padx=10, pady=10, sticky='ew')
+    job_checkbox = customtkinter.CTkCheckBox(cpu_tab, text=entry[0])
+    job_checkbox.grid(row=i, column=0, padx=10, pady=10, sticky='ew')
     job_enrties.append(job_checkbox)
 
 radius_label = customtkinter.CTkLabel(left_frame, text='Radius', anchor="w")
