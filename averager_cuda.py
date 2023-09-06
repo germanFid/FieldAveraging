@@ -45,24 +45,6 @@ def cuda_basic_3d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
     return output_array_gpu.copy_to_host()
 
 
-@cuda.jit('void(float64[:, :, :], float64[:, :, :], int32)')
-def cuda_kernel_field_average_3d(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
-                                 output_array: cuda.cudadrv.devicearray.DeviceNDArray,
-                                 radius: int):
-    """
-    Cuda GPU Kernel function that use absolute gpu indexing of threads to go through
-    given array and and use basic 3d averaging method on each point.
-
-    Args:
-        input_array (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
-        output_array (cuda.cudadrv.devicearray.DeviceNDArray): peasantly averaged 3d field
-        radius (int): averaging radius around array point
-    """
-    i, j, k = cuda.grid(3)
-    if i < output_array.shape[0] and j < output_array.shape[1] and k < output_array.shape[2]:
-        output_array[i, j, k] = cuda_average_this_3d_point(input_array, radius, i, j, k)
-
-
 @cuda.jit('float64(float64[:, :, :], int32, int32, int32, int32)', device=True)
 def cuda_average_this_3d_point(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
                                radius: int, i: int, j: int, k: int):
@@ -97,6 +79,24 @@ def cuda_average_this_3d_point(input_array: cuda.cudadrv.devicearray.DeviceNDArr
     return sum_val / count
 
 
+@cuda.jit('void(float64[:, :, :], float64[:, :, :], int32)')
+def cuda_kernel_field_average_3d(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
+                                 output_array: cuda.cudadrv.devicearray.DeviceNDArray,
+                                 radius: int):
+    """
+    Cuda GPU Kernel function that use absolute gpu indexing of threads to go through
+    given array and and use basic 3d averaging method on each point.
+
+    Args:
+        input_array (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
+        output_array (cuda.cudadrv.devicearray.DeviceNDArray): peasantly averaged 3d field
+        radius (int): averaging radius around array point
+    """
+    i, j, k = cuda.grid(3)
+    if i < output_array.shape[0] and j < output_array.shape[1] and k < output_array.shape[2]:
+        output_array[i, j, k] = cuda_average_this_3d_point(input_array, radius, i, j, k)
+
+
 def cuda_basic_2d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.DeviceNDArray,
                                   radius: int,
                                   launch_data: VCardLaunchData,
@@ -119,24 +119,6 @@ def cuda_basic_2d_array_averaging(input_array_gpu: cuda.cudadrv.devicearray.Devi
             input_array_gpu, output_array_gpu, radius)
         input_array_gpu = output_array_gpu
     return output_array_gpu.copy_to_host()
-
-
-@cuda.jit('void(float64[:, :], float64[:, :], int32)')
-def cuda_kernel_field_average_2d(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
-                                 output_array: cuda.cudadrv.devicearray.DeviceNDArray,
-                                 radius: int):
-    """
-    Cuda GPU Kernel function that use absolute GPU indexing of threads to go through
-    given array and and use basic 2d averaging method on each point.
-
-    Args:
-        input_array (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
-        output_array (cuda.cudadrv.devicearray.DeviceNDArray): peasantly averaged 2d field
-        radius (int): averaging radius around array point
-    """
-    i, j = cuda.grid(2)
-    if i < output_array.shape[0] and j < output_array.shape[1]:
-        output_array[i, j] = cuda_average_this_2d_point(input_array, radius, i, j)
 
 
 @cuda.jit('float64(float64[:, :], int32, int32, int32)', device=True)
@@ -169,7 +151,25 @@ def cuda_average_this_2d_point(input_array: cuda.cudadrv.devicearray.DeviceNDArr
     return sum_val / count
 
 
-def average_with_gauss(cpu_data: np.ndarray, sigma: int, iterations: int = 1) -> np.ndarray:
+@cuda.jit('void(float64[:, :], float64[:, :], int32)')
+def cuda_kernel_field_average_2d(input_array: cuda.cudadrv.devicearray.DeviceNDArray,
+                                 output_array: cuda.cudadrv.devicearray.DeviceNDArray,
+                                 radius: int):
+    """
+    Cuda GPU Kernel function that use absolute GPU indexing of threads to go through
+    given array and and use basic 2d averaging method on each point.
+
+    Args:
+        input_array (cuda.cudadrv.devicearray.DeviceNDArray): field to get averaged
+        output_array (cuda.cudadrv.devicearray.DeviceNDArray): peasantly averaged 2d field
+        radius (int): averaging radius around array point
+    """
+    i, j = cuda.grid(2)
+    if i < output_array.shape[0] and j < output_array.shape[1]:
+        output_array[i, j] = cuda_average_this_2d_point(input_array, radius, i, j)
+
+
+def cuda_average_with_gauss(cpu_data: np.ndarray, sigma: int, iterations: int = 1) -> np.ndarray:
     launch_data = VCardLaunchData(cpu_data)
     window_data = GaussWindowData(sigma)
     window_data.transfer_window_to_gpu()
@@ -177,83 +177,88 @@ def average_with_gauss(cpu_data: np.ndarray, sigma: int, iterations: int = 1) ->
 
     match cpu_data.ndim:
         case 1:
-            output = average_1d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
+            output = cuda_average_1d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
         case 2:
-            output = average_2d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
+            output = cuda_average_2d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
         case 3:
-            output = average_3d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
+            output = cuda_average_3d_by_gauss(gpu_old_data, launch_data, window_data, iterations)
         case _:
             print("Strange dimension, exitting...")
             exit()
     return output
 
 
-def average_1d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                        launch_data: VCardLaunchData, window_data: GaussWindowData,
-                        iterations: int = 1):
+def cuda_average_1d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                             launch_data: VCardLaunchData, window_data: GaussWindowData,
+                             iterations: int = 1):
     oper_data = cuda.device_array(old_data)
     for i in range(iterations):
         if i % 2 == 0:
-            average_1d_by_x_gauss[launch_data.blocksPerGrid,
-                                  launch_data.threadsPerBlock](old_data, oper_data,
-                                                               window_data.gpu_window,
-                                                               window_data.size,
-                                                               window_data.sum)
+            cuda_average_1d_by_x_gauss[launch_data.blocksPerGrid,
+                                       launch_data.threadsPerBlock](old_data, oper_data,
+                                                                    window_data.gpu_window,
+                                                                    window_data.size,
+                                                                    window_data.sum)
         else:
-            average_1d_by_x_gauss[launch_data.blocksPerGrid,
-                                  launch_data.threadsPerBlock](oper_data, old_data,
-                                                               window_data.gpu_window,
-                                                               window_data.size,
-                                                               window_data.sum)
+            cuda_average_1d_by_x_gauss[launch_data.blocksPerGrid,
+                                       launch_data.threadsPerBlock](oper_data, old_data,
+                                                                    window_data.gpu_window,
+                                                                    window_data.size,
+                                                                    window_data.sum)
     if iterations % 2 == 1:
         old_data = oper_data
     return old_data.copy_to_host()
 
 
-def average_2d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                        launch_data: VCardLaunchData, window_data: GaussWindowData,
-                        iterations: int = 1):
+def cuda_average_2d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                             launch_data: VCardLaunchData, window_data: GaussWindowData,
+                             iterations: int = 1):
     oper_data = cuda.device_array(old_data)
     for i in range(iterations):
-        average_2d_by_x_gauss[launch_data.blocksPerGrid,
-                              launch_data.threadsPerBlock](old_data, oper_data,
-                                                           window_data.gpu_window, window_data.size,
-                                                           window_data.sum)
-        average_2d_by_y_gauss[launch_data.blocksPerGrid,
-                              launch_data.threadsPerBlock](oper_data, old_data,
-                                                           window_data.gpu_window, window_data.size,
-                                                           window_data.sum)
+        cuda_average_2d_by_x_gauss[launch_data.blocksPerGrid,
+                                   launch_data.threadsPerBlock](old_data, oper_data,
+                                                                window_data.gpu_window,
+                                                                window_data.size,
+                                                                window_data.sum)
+        cuda_average_2d_by_y_gauss[launch_data.blocksPerGrid,
+                                   launch_data.threadsPerBlock](oper_data, old_data,
+                                                                window_data.gpu_window,
+                                                                window_data.size,
+                                                                window_data.sum)
     return old_data.copy_to_host()
 
 
-def average_3d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                        launch_data: VCardLaunchData, window_data: GaussWindowData,
-                        iterations: int = 1):
+def cuda_average_3d_by_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                             launch_data: VCardLaunchData, window_data: GaussWindowData,
+                             iterations: int = 1):
 
     oper_data = cuda.device_array_like(old_data)
     oper_data2 = cuda.device_array_like(old_data)
     for i in range(iterations):
-        average_3d_by_x_gauss[launch_data.blocksPerGrid,
-                              launch_data.threadsPerBlock](old_data, oper_data,
-                                                           window_data.gpu_window, window_data.size,
-                                                           window_data.sum)
-        average_3d_by_y_gauss[launch_data.blocksPerGrid,
-                              launch_data.threadsPerBlock](oper_data, oper_data2,
-                                                           window_data.gpu_window, window_data.size,
-                                                           window_data.sum)
-        average_3d_by_z_gauss[launch_data.blocksPerGrid,
-                              launch_data.threadsPerBlock](oper_data2, old_data,
-                                                           window_data.gpu_window, window_data.size,
-                                                           window_data.sum)
+        cuda_average_3d_by_x_gauss[launch_data.blocksPerGrid,
+                                   launch_data.threadsPerBlock](old_data, oper_data,
+                                                                window_data.gpu_window,
+                                                                window_data.size,
+                                                                window_data.sum)
+        cuda_average_3d_by_y_gauss[launch_data.blocksPerGrid,
+                                   launch_data.threadsPerBlock](oper_data, oper_data2,
+                                                                window_data.gpu_window,
+                                                                window_data.size,
+                                                                window_data.sum)
+        cuda_average_3d_by_z_gauss[launch_data.blocksPerGrid,
+                                   launch_data.threadsPerBlock](oper_data2, old_data,
+                                                                window_data.gpu_window,
+                                                                window_data.size,
+                                                                window_data.sum)
     return old_data.copy_to_host()
 
 
 @cuda.jit('void(float64[:], float64[:], float64[:],\
            int32, float64)')
-def average_1d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_1d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     x_th = cuda.grid(1)
 
     if (x_th < old_data.shape[0]):
@@ -275,10 +280,10 @@ def average_1d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
 
 @cuda.jit('void(float64[:, :], float64[:, :], float64[:],\
            int32, float64)')
-def average_2d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_2d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     y_th, x_th = cuda.grid(2)
 
     if (y_th < old_data.shape[0] and x_th < old_data.shape[1]):
@@ -300,10 +305,10 @@ def average_2d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
 
 @cuda.jit('void(float64[:, :], float64[:, :], float64[:],\
            int32, float64)')
-def average_2d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_2d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     y_th, x_th = cuda.grid(2)
 
     if (y_th < old_data.shape[0] and x_th < old_data.shape[1]):
@@ -325,10 +330,10 @@ def average_2d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
 
 @cuda.jit('void(float64[:, :, :], float64[:, :, :], float64[:],\
            int32, float64)')
-def average_3d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_3d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     z_th, y_th, x_th = cuda.grid(3)
 
     if (z_th < old_data.shape[0] and y_th < old_data.shape[1] and x_th < old_data.shape[2]):
@@ -350,10 +355,10 @@ def average_3d_by_x_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
 
 @cuda.jit('void(float64[:, :, :], float64[:, :, :], float64[:],\
            int32, float64)')
-def average_3d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_3d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     z_th, y_th, x_th = cuda.grid(3)
 
     if (z_th < old_data.shape[0] and y_th < old_data.shape[1] and x_th < old_data.shape[2]):
@@ -375,10 +380,10 @@ def average_3d_by_y_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
 
 @cuda.jit('void(float64[:, :, :], float64[:, :, :], float64[:],\
            int32, float64)')
-def average_3d_by_z_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          new_data: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window: cuda.cudadrv.devicearray.DeviceNDArray,
-                          window_size: int, window_sum: float):
+def cuda_average_3d_by_z_gauss(old_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               new_data: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window: cuda.cudadrv.devicearray.DeviceNDArray,
+                               window_size: int, window_sum: float):
     z_th, y_th, x_th = cuda.grid(3)
 
     if (z_th < old_data.shape[0] and y_th < old_data.shape[1] and x_th < old_data.shape[2]):
