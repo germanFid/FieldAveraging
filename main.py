@@ -3,8 +3,34 @@ import structures
 import logging
 import averager
 import useful_graphics
-
 import numpy as np
+from CUDA_general import detect_cuda
+from numba import cuda
+
+number_of_devices = detect_cuda()
+match number_of_devices:
+    case 0:
+        "No CUDA devices were found, loading without CUDA code."
+    case 1:
+        import averager_cuda
+    case _:
+        import averager_cuda
+        try:
+            inputed_id = int(input("Select CUDA device id:"))
+            cuda.select_device(inputed_id)
+        except Exception:
+            print("Inputed id is greater than number of devices.")
+            successfull = False
+            while (not successfull):
+                inputed_id = int(input("Try another one to be between 0 and %d:"
+                                       % (number_of_devices - 1)))
+                successfull = inputed_id >= 0 and inputed_id <= (number_of_devices - 1)
+                print("Error: %d is not between 0 and %d..."
+                      % (inputed_id, (number_of_devices - 1)))
+            cuda.select_device(inputed_id)
+        else:
+            print("Successfully selected id %d cuda device!" % (inputed_id))
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('inputfile', help='input csv file', type=str)
