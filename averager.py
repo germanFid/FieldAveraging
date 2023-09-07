@@ -284,6 +284,7 @@ def init_gauss_window(sigma: int) -> Tuple[np.ndarray, float]:
     return window, window_sum
 
 
+@njit
 def average_vertical_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                               window_size: int, height: int, x: int, z: int):
 
@@ -315,6 +316,7 @@ def average_vertical_gauss_3d(copied_field: np.ndarray, window: np.ndarray, wind
         copied_field[z][i][x] = temp_vertical[i]
 
 
+@njit
 def average_horizontal_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                                 window_size: int, width: int, y: int, z: int):
 
@@ -344,6 +346,7 @@ def average_horizontal_gauss_3d(copied_field: np.ndarray, window: np.ndarray, wi
         copied_field[z][y][i] = temp_horizontal[i]
 
 
+@njit
 def average_depth_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                            window_size: int, depth: int, x: int, y: int):
 
@@ -373,6 +376,7 @@ def average_depth_gauss_3d(copied_field: np.ndarray, window: np.ndarray, window_
         copied_field[i][y][x] = temp_depth[i]
 
 
+@njit
 def average_vertical_gauss_2d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                               window_size: int, height: int, x: int):
 
@@ -401,6 +405,7 @@ def average_vertical_gauss_2d(copied_field: np.ndarray, window: np.ndarray, wind
         copied_field[i][x] = temp_vertical[i]
 
 
+@njit
 def average_horizontal_gauss_2d(copied_field: np.ndarray, window: np.ndarray, window_sum: float,
                                 window_size: int, width: int, y: int):
 
