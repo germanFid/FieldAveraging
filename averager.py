@@ -434,6 +434,7 @@ def average_horizontal_gauss_2d(copied_field: np.ndarray, window: np.ndarray, wi
         copied_field[y][i] = temp_horizontal[i]
 
 
+@njit
 def average_3d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     """
     Gauss method of 3-Dimensional averaging going line-by-line
@@ -471,6 +472,7 @@ def average_3d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     return copied_field
 
 
+@njit
 def average_2d_by_gauss(in_field: np.ndarray, sigma: int) -> np.ndarray:
     """
     Gauss method of 2-Dimensional averaging going line-by-line
